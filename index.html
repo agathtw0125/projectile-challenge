@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>電子一甲 拋體命題挑戰</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=LXGW+WenKai+TC:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: sticky group tabs → per-group header → three question blocks (text+guide left, figure/sim right) → locked solutions at the end */
+:root{
+  --bg:#EDF1F3; --surface:#FFFFFF; --sunk:#E3E9ED; --ink:#15212E; --muted:#56657A; --line:#C9D3DB;
+  --accent:#D9480F; --accent-soft:#FBE3D6; --blue:#1C64C8; --blue-soft:#DCE8F8; --ok:#2B7A3D; --ok-soft:#DDF0E0; --warn:#A35C00; --warn-soft:#FBEBCF;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --f-hand:"LXGW WenKai TC","Kaiti TC","DFKai-SB",serif;
+  --f-num:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F161D; --surface:#17212B; --sunk:#1F2B37; --ink:#E6ECF1; --muted:#9AA8B8; --line:#2E3C4A;
+  --accent:#FF7A3D; --accent-soft:#3A2116; --blue:#6EA8FF; --blue-soft:#18294A; --ok:#62C27A; --ok-soft:#16301E; --warn:#F0B354; --warn-soft:#3A2A10; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F161D; --surface:#17212B; --sunk:#1F2B37; --ink:#E6ECF1; --muted:#9AA8B8; --line:#2E3C4A;
+  --accent:#FF7A3D; --accent-soft:#3A2116; --blue:#6EA8FF; --blue-soft:#18294A; --ok:#62C27A; --ok-soft:#16301E; --warn:#F0B354; --warn-soft:#3A2A10; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.7}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{background:var(--surface);border-bottom:1px solid var(--line)}
+header.top .wrap{padding-block:22px 14px;display:flex;flex-wrap:wrap;gap:6px 24px;align-items:baseline;justify-content:space-between}
+h1{font-size:clamp(24px,3.4vw,36px);font-weight:900;margin:0;letter-spacing:.02em;text-wrap:balance}
+h1 small{display:block;font-size:14px;font-weight:500;color:var(--muted);letter-spacing:.08em}
+.legend{font-size:14px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap}
+.legend b{font-family:var(--f-num);color:var(--accent)}
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+nav.tabs .wrap{display:flex;gap:6px;overflow-x:auto;padding-block:8px;scrollbar-width:thin}
+nav.tabs a{flex:0 0 auto;text-decoration:none;color:var(--ink);padding:8px 16px;border-radius:999px;border:1px solid var(--line);font-weight:700;font-size:16px;display:flex;gap:8px;align-items:center}
+nav.tabs a .dot{font-family:var(--f-num);font-size:12px;color:var(--muted);font-weight:500}
+nav.tabs a[aria-current="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+nav.tabs a[aria-current="true"] .dot{color:var(--surface);opacity:.75}
+nav.tabs a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+main .wrap{padding-block:24px 64px;display:flex;flex-direction:column;gap:28px}
+.ghead{display:flex;flex-wrap:wrap;gap:10px 28px;align-items:flex-end;justify-content:space-between}
+.ghead h2{margin:0;font-size:clamp(26px,3vw,34px);font-weight:900}
+.ghead .members{color:var(--muted);font-size:15px}
+.ghead .topics{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-size:13px;padding:2px 10px;border-radius:999px;background:var(--sunk);color:var(--muted);font-weight:500;white-space:nowrap}
+.chip.done{background:var(--ok-soft);color:var(--ok)}
+.chip.prog{background:var(--accent-soft);color:var(--accent)}
+
+section.q{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);overflow:hidden}
+@media (max-width:920px){section.q{grid-template-columns:minmax(0,1fr)}}
+.qtext{padding:22px 24px 26px;display:flex;flex-direction:column;gap:16px;min-width:0;border-right:1px solid var(--line)}
+@media (max-width:920px){.qtext{border-right:0;border-bottom:1px solid var(--line)}}
+.qhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.qno{font-family:var(--f-num);font-weight:700;font-size:15px;background:var(--accent);color:#fff;border-radius:6px;padding:2px 10px}
+.qhead h3{margin:0;font-size:20px}
+.stem{font-size:18px;line-height:1.8}
+.opts{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.opts li{padding-left:2.2em;text-indent:-2.2em}
+.opts li b{font-family:var(--f-num);display:inline-block;width:2.2em;text-indent:0}
+.subs{margin:0;padding-left:1.4em}
+.note{font-size:13px;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:6px 10px}
+
+.guide{border-top:2px dashed var(--line);padding-top:14px;display:flex;flex-direction:column;gap:12px}
+.guide-title{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.guide-title h4{margin:0;font-size:16px;letter-spacing:.06em;color:var(--muted)}
+.step{border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;background:var(--surface)}
+.step.active{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.step.solved{background:var(--sunk);border-color:transparent}
+.step .sq{font-weight:700;display:flex;gap:10px}
+.step .sq .n{font-family:var(--f-num);color:var(--accent);flex:0 0 auto}
+.step.solved .sq .n{color:var(--ok)}
+.choices{display:flex;flex-wrap:wrap;gap:8px}
+.choices button,.answer button{font:inherit;font-size:16px;text-align:left;cursor:pointer;background:var(--surface);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:6px 12px;line-height:1.5}
+.choices button:hover:not(:disabled),.answer button:hover:not(:disabled){border-color:var(--accent)}
+.choices button.wrong,.answer button.wrong{border-color:var(--warn);color:var(--warn);text-decoration:line-through;text-decoration-thickness:1px}
+.choices button.right,.answer button.right{border-color:var(--ok);background:var(--ok-soft);color:var(--ok);font-weight:700}
+.choices button:disabled,.answer button:disabled{cursor:default}
+.numrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.numrow input{font-family:var(--f-num);font-size:18px;width:8em;padding:6px 10px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
+.numrow .unit{font-family:var(--f-num);color:var(--muted)}
+.btn{font:inherit;font-size:15px;font-weight:700;cursor:pointer;border-radius:8px;padding:6px 14px;border:1.5px solid var(--ink);background:var(--ink);color:var(--surface)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line);font-weight:500}
+.btn.small{font-size:13px;padding:3px 10px}
+.fb{font-family:var(--f-hand);font-size:18px;line-height:1.6;border-radius:8px;padding:8px 12px}
+.fb.hint{background:var(--warn-soft);color:var(--ink)}
+.fb.hint::before{content:"想一想　";color:var(--warn);font-weight:700}
+.fb.ok{background:var(--ok-soft);color:var(--ink)}
+.fb.ok::before{content:"✓　";color:var(--ok);font-weight:700}
+.answer{border-top:2px solid var(--ink);padding-top:14px;display:flex;flex-direction:column;gap:10px}
+.answer h4{margin:0;font-size:16px}
+.answer .choices{flex-direction:column}
+.locked{color:var(--muted);font-size:15px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+.fig{background:var(--sunk);display:flex;flex-direction:column;min-width:0}
+.figtabs{display:flex;gap:0;border-bottom:1px solid var(--line);background:var(--surface)}
+.figtabs button{flex:1;font:inherit;font-weight:700;font-size:15px;padding:10px;background:transparent;color:var(--muted);border:0;border-bottom:3px solid transparent;cursor:pointer}
+.figtabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.figbody{padding:14px;display:flex;flex-direction:column;gap:10px}
+.figbody svg{width:100%;height:auto;display:block;background:var(--surface);border-radius:8px}
+canvas.sim{width:100%;display:block;background:var(--surface);border-radius:8px;touch-action:manipulation}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:14px}
+.ctrls label{display:flex;gap:5px;align-items:center;cursor:pointer;color:var(--muted)}
+.ctrls select{font:inherit;font-size:14px;padding:3px 6px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.readout{font-family:var(--f-body);font-size:14px;color:var(--ink);display:flex;flex-direction:column;gap:6px;min-height:1.6em;font-variant-numeric:tabular-nums;line-height:1.9}
+.readout:empty{display:none}
+.readout .ro-h{font-size:13px;color:var(--muted)}
+.readout .ro-k{display:inline-block;min-width:6em;font-size:12px;color:var(--muted);font-weight:700}
+.readout .ro-note{font-size:13px;color:var(--muted);border-top:1px dashed var(--line);padding-top:4px}
+.readout b{font-family:var(--f-num);color:var(--accent)}
+.readout i,.fr i{font-family:"Times New Roman",var(--f-body)}
+.fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.82em;line-height:1.15;margin:0 2px}
+.fr > i{font-style:normal;display:block}
+.fr > i:first-child{border-bottom:1px solid currentColor;padding:0 2px}
+.eqs{overflow-x:auto;overflow-y:hidden;padding:4px 0}
+.eqlab{margin:10px 0 2px;font-weight:700;font-size:15px}
+.sol-list{margin:6px 0;padding-left:1.2em;line-height:1.9}
+.katex{font-size:1.08em}
+.eqs .katex-display{margin:.2em 0;text-align:left}
+.eqs .katex-display>.katex{text-align:left;font-size:1.12em}
+.choices .katex,.fb .katex{font-size:1.04em}
+.simmsg{font-family:var(--f-hand);font-size:17px;color:var(--accent);min-height:1.6em}
+.sv-ink{stroke:var(--ink);fill:none}
+.sv-fill{fill:var(--sunk);stroke:var(--line)}
+.sv-acc{stroke:var(--accent);fill:var(--accent)}
+.sv-blue{stroke:var(--blue);fill:var(--blue)}
+.sv-txt{fill:var(--ink);font-family:var(--f-body);font-size:14px}
+.sv-ask{fill:var(--accent);font-family:var(--f-hand);font-size:17px;font-weight:700}
+.sv-mut{stroke:var(--muted);fill:none}
+
+.solwrap{background:var(--surface);border:2px solid var(--ink);border-radius:var(--r);padding:22px 24px;display:flex;flex-direction:column;gap:16px}
+.solwrap h3{margin:0;font-size:22px}
+.confirm{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--accent-soft);padding:10px 14px;border-radius:8px}
+.sol{display:grid;gap:18px}
+.sol article{border-left:4px solid var(--accent);padding-left:16px;min-width:0}
+.sol article h4{margin:0 0 6px;font-size:18px}
+.sol .eq{font-family:var(--f-num);background:var(--sunk);border-radius:6px;padding:8px 12px;overflow-x:auto;white-space:pre;font-size:15px;line-height:1.8}
+.sol .ans{font-weight:900;color:var(--accent)}
+details.teacher{border:1px dashed var(--line);border-radius:8px;padding:10px 14px;font-size:15px}
+details.teacher summary{cursor:pointer;font-weight:700;color:var(--muted)}
+details.teacher ul{margin:8px 0 0;padding-left:1.3em}
+sub,sup{font-size:.7em}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+
+<header class="top"><div class="wrap">
+  <h1><small>電子一甲 · 平面運動第一循環 · WSQ 學習單第 8–10 題</small>小組命題挑戰：拋體運動</h1>
+  <div class="legend"><span>每題先跟著<b>引導步驟</b>推理，再選答案</span><span>右側可切換<b>示意圖／模擬動畫</b></span><span>詳解在每組最下方</span></div>
+</div></header>
+<nav class="tabs" aria-label="選擇組別"><div class="wrap" id="tabs"></div></nav>
+<main><div class="wrap" id="main"></div></main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script>
+
+/* ===================== 題目資料 ===================== */
+/* 公式以 TeX 撰寫：行內 \( … \)，直式（分行對齊）\[ \begin{aligned} … \end{aligned} \] */
+const M = String.raw;
+const qSteel = {
+  tag:'自由落體', title:'鋼珠自由落下',
+  stem:'某同學在實驗中將一鋼珠自距離地面 <b>20 公尺</b>高度由<b>靜止</b>自由釋放。若忽略空氣阻力且取 g = 10 m/s²，試問鋼珠自釋放至著地共歷時幾秒？著地瞬間的速度大小為何？',
+  options:['歷時 2 秒，著地速度 20 m/s','歷時 2 秒，著地速度 10 m/s','歷時 4 秒，著地速度 20 m/s','歷時 4 秒，著地速度 40 m/s'], ans:0,
+  optFb:{1:M`時間沒問題的話，再檢查速度：速度公式 \(v = v_0 + gt\) 裡面有沒有 \(\dfrac{1}{2}\)？`,2:M`4 是 \(t^2\) 還是 \(t\)？記得最後要開根號。`,3:M`時間和速度都再對一次：\(20 = \dfrac{1}{2} \times 10 \times t^2\)，\(t^2\) 是多少？\(t\) 呢？`},
+  steps:[
+    {t:'mc',q:'題目說「由靜止釋放」，這告訴我們什麼？',c:[M`初速度 \(v_0 = 0\)`,M`加速度 \(a = 0\)`,'鋼珠的速度一直是 0'],a:0,h:{1:'釋放後鋼珠越落越快，速度在改變，加速度不可能是 0。',2:'如果速度一直是 0，鋼珠就會停在空中了。「靜止」只描述「開始那一刻」。'},ok:'「靜止」只說明出發瞬間速度為 0。'},
+    {t:'mc',q:M`已知高度 \(h\)、\(g\)、\(v_0 = 0\)，想先求「時間 \(t\)」，選哪一條式子最直接？`,c:[M`\(h = \dfrac{1}{2} g t^2\)`,M`\(v = g t\)`,M`\(v^2 = 2 g h\)`],a:0,h:{1:M`這條式子要先知道末速度 \(v\)，我們還不知道。`,2:M`這條式子裡沒有 \(t\)，求不出時間。`},ok:M`式子裡已知 \(h\)、\(g\)，只剩 \(t\) 未知。`},
+    {t:'num',q:M`代入：\(20 = \dfrac{1}{2} \times 10 \times t^2\)，則 \(t^2\) = ？`,a:4,u:'s²',h:M`先算 \(\dfrac{1}{2} \times 10 = 5\)，所以 \(20 = 5t^2\)。`,ok:M`接著別忘了 \(t^2\) 不是 \(t\)。`},
+    {t:'num',q:M`所以 \(t\) = ？`,a:2,u:'s',h:'哪個正數平方後會等於上一步的結果？時間只取正值。',ok:'時間求出來了。'},
+    {t:'num',q:M`著地速度 \(v = v_0 + g t\) = ？`,a:20,u:'m/s',h:M`\(v_0 = 0\)，\(g = 10\)，\(t\) 用上一步的結果。`,ok:M`也可以用 \(v^2 = 2gh\) 驗算看看是否一樣。`},
+  ],
+  sim:{type:'fall',h:20,v0:0,strobe:0.5},
+  dg:{kind:'drop',h:'h = 20 m',v0:'v₀ = 0',ask:['t = ?','v = ?']},
+  sol:M`<p>取向下為正，\(v_0 = 0\)、\(a = g = 10\ \text{m/s}^2\)。</p>
+<div class="eqs">\[\begin{aligned} h &= \dfrac{1}{2} g t^2 \\ 20 &= \dfrac{1}{2} \times 10 \times t^2 \\ t^2 &= 4 \\ t &= 2\ \text{s} \end{aligned}\]</div>
+<div class="eqs">\[\begin{aligned} v &= v_0 + g t \\ &= 0 + 10 \times 2 \\ &= 20\ \text{m/s} \end{aligned}\]</div>
+<p class="eqlab">驗算</p><div class="eqs">\[\begin{aligned} v^2 &= 2gh = 2 \times 10 \times 20 = 400 \\ v &= 20\ \text{m/s} \end{aligned}\]</div>
+<p>答案 <span class="ans">(A)</span>。常見錯誤：(B) 把速度算成 \(\dfrac{1}{2}gt\)；(C) 把 \(t^2 = 4\) 當成 \(t\)。</p>`
+};
+
+const GROUPS = [
+{ id:1, name:'第 1 組', members:'',
+  qs:[ qSteel,
+  { tag:'斜向拋射', title:'足球斜踢',
+    stem:M`足球員在草地上將足球以初速度 <b>20 m/s</b>、仰角 <b>45°</b> 斜向踢出。若取 g = 10 m/s²，忽略空氣阻力，已知 \(\sin 45^\circ = \cos 45^\circ = \dfrac{\sqrt{2}}{2}\)，試求此足球在空中所能達到的最大高度與水平射程分別為何？`,
+    note:M`原學習單中的數字符號在送出時遺失，依選項還原為 \(v_0 = 20\) m/s、\(\theta = 45^\circ\)。`,
+    options:['最大高度 10 公尺，水平射程 40 公尺','最大高度 5 公尺，水平射程 20 公尺','最大高度 5 公尺，水平射程 10 公尺','最大高度 20 公尺，水平射程 80 公尺'], ans:0,
+    optFb:{1:M`兩個數字剛好都是某組答案的一半，回頭檢查 \(v_y^{\,2}\) 有沒有算對。`,2:'射程要用「整段飛行時間」乘水平速度，不是只用上升時間。',3:M`最大高度公式的分母是 \(2g\)，不是 \(g\)。`},
+    steps:[
+      {t:'mc',q:M`先把初速度拆成兩個方向。水平分量 \(v_x\) 與鉛直分量 \(v_y\) 分別是？`,c:[M`\(v_x = v_0\cos\theta\)，\(v_y = v_0\sin\theta\)`,M`\(v_x = v_0\sin\theta\)，\(v_y = v_0\cos\theta\)`,M`\(v_x = v_y = v_0\)`],a:0,h:{1:M`畫出直角三角形：\(\theta\) 是和「水平地面」的夾角，鄰邊是哪一個方向？`,2:M`斜邊是 \(v_0\)，兩股都會比斜邊短。`},ok:'45° 時兩個分量一樣大。'},
+      {t:'num',q:M`\(v_y^{\,2} = \left(20 \times \dfrac{\sqrt{2}}{2}\right)^2\) = ？`,a:200,u:'(m/s)²',h:M`\((\sqrt{2})^2 = 2\)，所以 \(\left(20 \times \dfrac{\sqrt{2}}{2}\right)^2 = \dfrac{400 \times 2}{4}\)。`,ok:'先留著平方，等一下最好用。'},
+      {t:'mc',q:'足球到最高點時，哪個速度分量會變成 0？',c:[M`鉛直分量 \(v_y\)`,M`水平分量 \(v_x\)`,'兩個都變成 0'],a:0,h:{1:'水平方向沒有加速度，水平速度會改變嗎？',2:'如果兩個都是 0，足球會在最高點停住垂直掉下來嗎？看看模擬動畫。'},ok:'最高點時只剩水平速度。'},
+      {t:'num',q:M`最大高度 \(H = \dfrac{v_y^{\,2}}{2g}\) = ？`,a:10,u:'m',h:M`用上一步的 \(v_y^{\,2}\)，分母是 \(2 \times 10\)。`,ok:'最大高度完成。'},
+      {t:'num',q:M`飛行總時間 \(T = \dfrac{2v_y}{g}\)，水平射程 \(R = v_x T\) = ？（提示：\(\sqrt{2} \times \sqrt{2} = 2\)）`,a:40,u:'m',h:M`\(v_x = v_y = 10\sqrt{2}\) m/s，\(T = \dfrac{2 \times 10\sqrt{2}}{10} = 2\sqrt{2}\) s，相乘時 \(\sqrt{2} \times \sqrt{2} = 2\)。`,ok:M`射程也可用 \(R = \dfrac{v_0^{\,2} \sin 2\theta}{g}\) 驗算。`},
+    ],
+    sim:{type:'proj',h:0,v0:20,ang:45,strobe:0.25},
+    dg:{kind:'oblique',v0:'v₀ = 20 m/s',ang:'45°',ask:['H = ?','R = ?']},
+    sol:M`<div class="eqs">\[\begin{aligned} v_x = v_y &= 20 \times \dfrac{\sqrt{2}}{2} = 10\sqrt{2}\ \text{m/s} \\ H &= \dfrac{v_y^{\,2}}{2g} = \dfrac{200}{20} = 10\ \text{m} \\ T &= \dfrac{2v_y}{g} = \dfrac{2 \times 10\sqrt{2}}{10} = 2\sqrt{2}\ \text{s} \\ R &= v_x T = 10\sqrt{2} \times 2\sqrt{2} = 40\ \text{m} \end{aligned}\]</div>
+<p class="eqlab">驗算</p><div class="eqs">\[\begin{aligned} R &= \dfrac{v_0^{\,2} \sin 2\theta}{g} \\ &= \dfrac{400 \times \sin 90^\circ}{10} \\ &= 40\ \text{m} \end{aligned}\]</div>
+<p>答案 <span class="ans">(A)</span>。</p>`
+  },
+  { tag:'鉛直上拋', title:'上拋四問',
+    stem:'一顆球自地面以初速度 <b>20 m/s</b> 鉛直向上拋出（g = 10 m/s²，忽略空氣阻力）：',
+    subs:['球經過幾秒到達最高點？','球上升的最大高度是多少？','在最高點時，速度與加速度分別是多少？','球回到原拋出位置需要幾秒？'],
+    note:M`原題沒有寫出初速度，且把答案寫在「選項」欄；這裡補上 \(v_0 = 20\) m/s，改成問答題。`,
+    options:null,
+    steps:[
+      {t:'mc',q:'球往上飛的過程中，速度和加速度的方向分別是？',c:['速度向上，加速度向下','速度向上，加速度向上','速度向上，加速度為 0'],a:0,h:{1:'如果加速度也向上，球會越飛越快，永遠不會掉下來。',2:'加速度為 0 代表速度不變，但球明明越飛越慢。'},ok:'速度與加速度反向，所以減速。'},
+      {t:'num',q:M`到達最高點那一瞬間，速度 \(v\) = ？`,a:0,u:'m/s',h:'最高點是「由上升轉為下降」的轉折點，鉛直速度此時是多少？',ok:'這就是解題的關鍵條件。'},
+      {t:'num',q:M`由 \(v = v_0 - g t\)，算出到達最高點的時間 \(t\) = ？`,a:2,u:'s',h:M`把上一步的 \(v\) 代入：\(0 = 20 - 10t\)。`,ok:'第 1 問完成。'},
+      {t:'num',q:M`最大高度 \(H = \dfrac{v_0^{\,2}}{2g}\) = ？`,a:20,u:'m',h:M`\(20^2 = 400\)，分母是 \(2 \times 10\)。也可以用「平均速度 × 時間」驗算。`,ok:'第 2 問完成。'},
+      {t:'mc',q:'最高點的加速度是多少？',c:['0','10 m/s²，向下','10 m/s²，向上'],a:1,h:{0:'速度是 0，加速度就是 0 嗎？如果加速度真的是 0，球的速度會一直維持 0，會發生什麼事？',2:'球在最高點之後是往哪裡加速？'},ok:M`第 3 問完成：速度 0，但加速度仍是 \(g\)。`},
+      {t:'num',q:'球回到原拋出位置，總共經過幾秒？',a:4,u:'s',h:'上升和下降的過程對稱嗎？下降需要的時間和上升比起來呢？',ok:'第 4 問完成。'},
+    ],
+    sim:{type:'fall',h:0,v0:20,strobe:0.5,pauseTop:true},
+    dg:{kind:'up',v0:'v₀ = 20 m/s',ask:['t頂 = ?','H = ?','T = ?']},
+    sol:M`<p>取向上為正，\(a = -g = -10\ \text{m/s}^2\)。</p>
+<p class="eqlab">1. 到達最高點的時間（最高點 \(v = 0\)）</p><div class="eqs">\[\begin{aligned} v &= v_0 - g t \\ 0 &= 20 - 10t \\ t &= 2\ \text{s} \end{aligned}\]</div>
+<p class="eqlab">2. 最大高度</p><div class="eqs">\[\begin{aligned} H &= \dfrac{v_0^{\,2}}{2g} \\ &= \dfrac{20^2}{2 \times 10} \\ &= 20\ \text{m} \end{aligned}\]</div>
+<p class="eqlab">3. 最高點：速度 = 0；加速度 = 10 m/s²，方向鉛直向下</p>
+<p class="eqlab">4. 上升、下降對稱</p><div class="eqs">\[T = 2 \times 2 = 4\ \text{s}\]</div>`
+  }],
+  teacher:[]
+},
+{ id:2, name:'第 2 組', members:'',
+  qs:[ qSteel,
+  { tag:'鉛直上拋', title:'棒球最高點',
+    stem:'一棒球自地面以初速度 <b>20 m/s</b> 鉛直向上拋出。當棒球上升到達運動軌跡的「最高點瞬間」，其瞬時速度與瞬時加速度狀態分別為何？（取 g = 10 m/s²，鉛直向下）',
+    options:['瞬時速度為 0，瞬時加速度為 10 m/s² 鉛直向下','瞬時速度為 0，瞬時加速度為 0','瞬時速度為 20 m/s，瞬時加速度為 10 m/s² 鉛直向下','瞬時速度為 0，瞬時加速度為 10 m/s² 鉛直向上'], ans:0,
+    optFb:{1:'速度為 0 那一瞬間，球受的力消失了嗎？加速度是由「力」決定，不是由「速度」決定。',2:'球上升時越來越慢，到最高點還會保持 20 m/s 嗎？',3:'加速度方向和「重力方向」有什麼關係？'},
+    steps:[
+      {t:'mc',q:'棒球離手後（忽略空氣阻力），受到哪些力？',c:['只有重力','重力和手的推力','不受任何力'],a:0,h:{1:'手推球只發生在球還在手上時，離手之後手還碰得到球嗎？',2:'如果不受力，球為什麼會掉下來？'},ok:'離手後只剩重力。'},
+      {t:'mc',q:'上升過程中，速度大小怎麼變化？',c:['越來越小','保持不變','越來越大'],a:0,h:{1:'打開模擬動畫的頻閃點，看看點和點的間距。',2:'越來越大的話球會一直往上飛。'},ok:'頻閃點間距越來越小。'},
+      {t:'mc',q:'最高點瞬間，速度是多少？',c:['0','20 m/s','10 m/s'],a:0,h:{1:'20 m/s 是剛離手時的速度。',2:'最高點是「不再上升、也還沒下降」的那一瞬間。'},ok:'最高點速度為 0。'},
+      {t:'mc',q:'物體的加速度是由什麼決定的？',c:['物體所受的力（這裡只有重力）','物體當下的速度','物體所在的高度'],a:0,h:{1:'速度為 0 的物體也可能正在加速，例如剛放開的鋼珠。',2:'在地面附近，高一點、低一點的重力加速度幾乎一樣。'},ok:'受力不變，加速度就不變。'},
+    ],
+    sim:{type:'fall',h:0,v0:20,strobe:0.25,pauseTop:true,vec:true},
+    dg:{kind:'up',v0:'v₀ = 20 m/s',ask:['最高點 v = ?','a = ?']},
+    sol:M`<p>棒球離手後只受重力，加速度全程都是 \(g = 10\ \text{m/s}^2\)、鉛直向下。上升時速度與加速度反向而減速，到最高點速度減為 0，之後向下加速。</p>
+<div class="eqs">\[\begin{aligned} a &= \dfrac{F}{m} = \dfrac{mg}{m} = g = 10\ \text{m/s}^2\ (\text{向下}) \\ v_{\text{最高點}} &= 0 \end{aligned}\]</div>
+<p>加速度不因速度為 0 而消失。答案 <span class="ans">(A)</span>。</p>`
+  },
+  { tag:'鉛直下拋', title:'向下拋 3 秒',
+    stem:M`一顆球以初速度 <b>\(v_0 = 5\) m/s</b> 鉛直向下拋出，取重力加速度 g = 10 m/s²，且不計空氣阻力。經過 <b>3 秒</b>後，該球的「末速度」與「下落距離」分別為何？`,
+    options:['末速度 30 m/s，下落距離 45 公尺','末速度 35 m/s，下落距離 60 公尺','末速度 35 m/s，下落距離 45 公尺','末速度 30 m/s，下落距離 60 公尺'], ans:1,
+    optFb:{0:'這組數字是「靜止釋放」才會得到的，題目的 5 m/s 初速度用到了嗎？',2:'速度有算進初速度，位移卻沒有？位移公式第一項是什麼？',3:'速度和位移，哪一個忘了初速度？'},
+    steps:[
+      {t:'mc',q:'取「向下為正」，初速度與加速度的正負號？',c:[M`\(v_0 = +5\)，\(a = +10\)`,M`\(v_0 = +5\)，\(a = -10\)`,M`\(v_0 = -5\)，\(a = +10\)`],a:0,h:{1:'重力向下，而我們選了向下為正。',2:'球是向下拋出的。'},ok:'兩者同方向，球會越來越快。'},
+      {t:'num',q:M`末速度 \(v = v_0 + g t\) = ？`,a:35,u:'m/s',h:M`\(5 + 10 \times 3\)。`,ok:'速度完成。'},
+      {t:'num',q:M`下落距離 \(d = v_0 t + \dfrac{1}{2} g t^2\) = ？`,a:60,u:'m',h:M`第一項 \(5 \times 3\)，第二項 \(\dfrac{1}{2} \times 10 \times 3^2\)，兩項相加。`,ok:'距離完成。'},
+      {t:'mc',q:'和「靜止釋放 3 秒落下 45 m」相比，多出來的 15 m 是哪一項貢獻的？',c:[M`\(v_0 t\)`,M`\(\dfrac{1}{2} g t^2\)`,M`\(g t\)`],a:0,h:{1:'這一項在靜止釋放時也有。',2:M`\(gt\) 的單位是 m/s，是速度不是距離。`},ok:'初速度讓每一秒都多走 5 m。'},
+    ],
+    sim:{type:'fall',h:80,v0:-5,strobe:1,stops:[3]},
+    dg:{kind:'drop',h:'高樓（夠高）',v0:'v₀ = 5 m/s ↓',ask:['3 s 後 v = ?','d = ?']},
+    sol:M`<p>取向下為正，\(v_0 = 5\) m/s、\(a = 10\ \text{m/s}^2\)、\(t = 3\) s。</p>
+<div class="eqs">\[\begin{aligned} v &= v_0 + g t \\ &= 5 + 10 \times 3 \\ &= 35\ \text{m/s} \end{aligned}\]</div>
+<div class="eqs">\[\begin{aligned} d &= v_0 t + \dfrac{1}{2} g t^2 \\ &= 5 \times 3 + \dfrac{1}{2} \times 10 \times 3^2 \\ &= 15 + 45 \\ &= 60\ \text{m} \end{aligned}\]</div>
+<p class="eqlab">驗算</p><div class="eqs">\[\begin{aligned} v^2 &= v_0^{\,2} + 2gd \\ 35^2 &= 5^2 + 2 \times 10 \times 60 \\ 1225 &= 25 + 1200 \end{aligned}\]</div>
+<p>答案 <span class="ans">(B)</span>。</p>`
+  }],
+  teacher:[]
+},
+{ id:3, name:'第 3 組', members:'',
+  qs:[
+  { tag:'鉛直上拋', title:'排球找錯誤',
+    stem:'一顆排球自地面以某初速鉛直上拋，已知上升至最高點耗時 <b>3 秒</b>後落下回到地面。若忽略空氣阻力，下列關於排球運動過程的敘述「<b>何者錯誤</b>」？',
+    options:['排球由最高點落回地面同樣需花費 3 秒','排球在空中運動的全程總時間為 6 秒','排球落回地面瞬間的速率等於剛拋出時的初速率','排球上升時加速度方向鉛直向上，下降時加速度方向鉛直向下'], ans:3,
+    optFb:{0:'這句話對嗎？上升與下降是否對稱？題目找的是「錯誤」的敘述。',1:'3 + 3 = ？這句話是對的，題目要找錯的。',2:'用模擬動畫比較拋出和落地時的速度箭頭長度。這句是對的還是錯的？'},
+    steps:[
+      {t:'mc',q:'這題問「何者錯誤」，作答策略是？',c:['逐一判斷每個選項，找出「不正確」的那一句','找出最正確的那一句','找計算結果最大的選項'],a:0,h:{1:'小心看題目最後的關鍵字。',2:'這題的選項大多是敘述，不是數字。'},ok:'接下來逐句檢查。'},
+      {t:'mc',q:'忽略空阻、落回同一高度時，上升與下降過程是否對稱？',c:['對稱，時間相同','下降比較快','上升比較快'],a:0,h:{1:'兩段過程加速度大小相同，距離也相同。',2:'打開頻閃點，比較上升和下降的點排列。'},ok:'所以下降也需 3 秒，全程 6 秒。'},
+      {t:'num',q:M`由上升 3 秒到最高點，可以求出初速率 \(v_0\) = ？`,a:30,u:'m/s',h:M`最高點 \(v = 0\)：\(0 = v_0 - 10 \times 3\)。`,ok:'對稱性告訴我們落地速率也是這個值。'},
+      {t:'mc',q:'排球「上升」時，加速度的方向是？',c:['鉛直向下','鉛直向上','加速度為 0'],a:0,h:{1:'加速度向上的話，球上升會越來越快。但上升時是越來越慢的。',2:'球在上升過程中速度一直在變。'},ok:'整段過程加速度方向都相同。'},
+    ],
+    sim:{type:'fall',h:0,v0:30,strobe:0.5,pauseTop:true,vec:true},
+    dg:{kind:'up',v0:'v₀ = ?',top:'到最高點 3 s',ask:['下降時間？','落地速率？']},
+    sol:M`<p class="eqlab">由最高點 \(v = 0\) 求初速</p><div class="eqs">\[\begin{aligned} v &= v_0 - g t \\ 0 &= v_0 - 10 \times 3 \\ v_0 &= 30\ \text{m/s} \end{aligned}\]</div>
+<ul class="sol-list"><li>(A) 上升與下降對稱，下降也是 3 s ✓</li><li>(B) 全程 3 + 3 = 6 s ✓</li><li>(C) 對稱性：落地速率 = 30 m/s = 初速率 ✓</li><li>(D) ✗ 全程只受重力，加速度「上升、下降都」鉛直向下</li></ul>
+<p>錯誤的敘述是 <span class="ans">(D)</span>。</p>`
+  },
+  { tag:'自由落體 vs 水平拋射', title:'兩球誰先落地',
+    stem:'在同一棟大樓的頂樓陽台邊緣，甲同學將 A 球自靜止自由釋放落下，與此同時乙同學將相同規格的 B 球以初速度 <b>15 m/s</b> 水平拋出。若忽略空氣阻力，關於 A、B 兩球運動過程的比較，下列敘述何者完全正確？',
+    options:['兩球同時落到地面，但 B 球著地時的速率大於 A 球','A 球先落到地面，且 A 球著地時的速率大於 B 球','B 球先落到地面，且 B 球著地時的速率大於 A 球','兩球同時落到地面，且兩球著地時的速率完全相同'], ans:0,
+    optFb:{1:'A 走的路線比較短，但「落地時間」由哪個方向決定？看模擬動畫兩球的高度。',2:'B 有水平速度，水平速度會讓它往下掉得比較快嗎？',3:'落地時間判斷對了。再想想：B 落地時的速度除了鉛直分量，還有什麼？'},
+    steps:[
+      {t:'mc',q:'兩球在「鉛直方向」的初速度分別是？',c:['都是 0','A 是 0，B 是 15 m/s','A 是 15 m/s，B 是 0'],a:0,h:{1:'B 的 15 m/s 是哪個方向？',2:'A 是靜止釋放的。'},ok:'鉛直方向起點相同。'},
+      {t:'mc',q:'兩球在鉛直方向的加速度？',c:[M`都是 \(g\)`,'B 比較大','A 比較大'],a:0,h:{1:'水平速度會改變重力嗎？',2:'兩球規格相同，都只受重力。'},ok:'鉛直方向的運動完全一樣。'},
+      {t:'mc',q:'所以兩球誰先落地？',c:['同時落地','A 先','B 先'],a:0,h:{1:'鉛直方向的初速度、加速度、高度都一樣，時間會不一樣嗎？',2:'打開模擬動畫，比較兩球每個頻閃點的高度。'},ok:'落地時間只由鉛直方向決定。'},
+      {t:'mc',q:'著地時，B 球的速度由哪些分量組成？',c:['水平 15 m/s 和鉛直分量','只有鉛直分量','只有水平 15 m/s'],a:0,h:{1:'水平方向沒有加速度，15 m/s 會消失嗎？',2:'B 也落下了一段高度，鉛直速度從 0 變大了。'},ok:M`B 的速率 \(v_B = \sqrt{15^2 + v_y^{\,2}}\)。`},
+      {t:'mc',q:M`B 的速率 \(\sqrt{15^2 + v_y^{\,2}}\) 和 A 的速率 \(v_y\) 相比？`,c:['B 比較大','A 比較大','一樣大'],a:0,h:{1:M`根號裡多了一個正的 \(15^2\)。`,2:M`兩球的 \(v_y\) 一樣，但 B 還多了水平分量。`},ok:'著地速率 B > A。'},
+    ],
+    sim:{type:'pair',h:45,vx:15,strobe:0.5},
+    dg:{kind:'pair'},
+    sol:M`<p>兩球鉛直方向：\(v_{0y} = 0\)、\(a = g\)、高度相同，所以鉛直運動完全相同 → <b>同時落地</b>。</p>
+<div class="eqs">\[\begin{aligned} v_A &= v_y \\ v_B &= \sqrt{v_x^{\,2} + v_y^{\,2}} = \sqrt{15^2 + v_y^{\,2}} \\ v_B &> v_A \end{aligned}\]</div>
+<p>答案 <span class="ans">(A)</span>。</p>`
+  },
+  { tag:'自由落體', title:'落下 2 秒的速度',
+    stem:'一物體自高處由靜止自由落下，若重力加速度 g = 10 m/s²，則此物體落下 <b>2 秒</b>後的瞬時速度為多少？',
+    options:['20 m/s','50 m/s','40 m/s','10 m/s'], ans:0,
+    optFb:{1:M`這個數字從哪裡來？用 \(v = v_0 + gt\) 代代看。`,2:M`公式是 \(v = gt\)，有沒有多乘了 2？`,3:'這是落下幾秒時的速度？題目問的是 2 秒。'},
+    steps:[
+      {t:'mc',q:'要求「某時刻的速度」，用哪一條公式？',c:[M`\(v = v_0 + g t\)`,M`\(h = \dfrac{1}{2} g t^2\)`,M`\(v^2 = 2 g h\)`],a:0,h:{1:'這條求的是距離。',2:'題目沒有給高度。'},ok:M`已知 \(v_0\)、\(g\)、\(t\)，正好可用。`},
+      {t:'num',q:M`\(v_0\) = ？`,a:0,u:'m/s',h:'「由靜止」落下。',ok:'接著代入。'},
+      {t:'num',q:M`\(v = v_0 + g t\) = ？`,a:20,u:'m/s',h:M`\(0 + 10 \times 2\)。`,ok:'可用模擬動畫在 2 秒暫停時對照讀數。'},
+    ],
+    sim:{type:'fall',h:45,v0:0,strobe:1,stops:[1,2]},
+    dg:{kind:'drop',h:'高處',v0:'v₀ = 0',ask:['t = 2 s 時 v = ?']},
+    sol:M`<div class="eqs">\[\begin{aligned} v &= v_0 + g t \\ &= 0 + 10 \times 2 \\ &= 20\ \text{m/s} \end{aligned}\]</div>
+<p>答案 <span class="ans">(A)</span>。自由落體每過 1 秒速度增加 10 m/s：1 s → 10 m/s、2 s → 20 m/s。</p>`
+  }],
+  teacher:[]
+},
+{ id:4, name:'第 4 組', members:'',
+  qs:[
+  { tag:'鉛直上拋', title:'壘球上拋',
+    stem:M`同學在操場將一壘球自地面以初速度 <b>\(v_0 = 30\) m/s</b> 鉛直向上拋出。若不計空氣阻力，g = 10 m/s²，試問壘球上升至最高點所需的時間，以及所能達到的最大高度（離地距離）分別為何？`,
+    note:'原題為拍照辨識文字，有錯字（如「D0=30M/5錯直向上地出」），已整理。',
+    options:['時間 2 秒，最大高度 20 公尺','時間 3 秒，最大高度 45 公尺','時間 3 秒，最大高度 90 公尺','時間 6 秒，最大高度 45 公尺'], ans:1,
+    optFb:{0:'這是初速 20 m/s 的結果，再代一次 30 m/s。',2:M`\(90 = 30 \times 3\)，這等於假設球一直用 30 m/s 等速上升。球有沒有在減速？`,3:'6 秒是「上升到最高點」還是「整段飛行」？'},
+    steps:[
+      {t:'num',q:'最高點的速度 = ？',a:0,u:'m/s',h:'最高點是上升轉為下降的轉折點。',ok:'有了末速度就能求時間。'},
+      {t:'num',q:M`由 \(v = v_0 - g t\)，上升時間 \(t\) = ？`,a:3,u:'s',h:M`\(0 = 30 - 10t\)。`,ok:'上升時間完成。'},
+      {t:'num',q:M`最大高度 \(H = \dfrac{v_0^{\,2}}{2g}\) = ？`,a:45,u:'m',h:M`\(30^2 = 900\)，分母是 \(2 \times 10 = 20\)。`,ok:'最大高度完成。'},
+      {t:'mc',q:M`用「平均速度 × 時間」驗算：平均速度 \(\bar v = \dfrac{30 + 0}{2} = 15\) m/s，乘上上升時間，和 \(H\) 一致嗎？`,c:['一致','不一致'],a:0,h:{1:M`\(15 \times 3\) = ？再和你算的 \(H\) 比較。`},ok:'兩種方法一致，答案可信。'},
+    ],
+    sim:{type:'fall',h:0,v0:30,strobe:0.5,pauseTop:true},
+    dg:{kind:'up',v0:'v₀ = 30 m/s',ask:['t = ?','H = ?']},
+    sol:M`<div class="eqs">\[\begin{aligned} v &= v_0 - g t \\ 0 &= 30 - 10t \\ t &= 3\ \text{s} \end{aligned}\]</div>
+<div class="eqs">\[\begin{aligned} H &= \dfrac{v_0^{\,2}}{2g} \\ &= \dfrac{30^2}{2 \times 10} \\ &= 45\ \text{m} \end{aligned}\]</div>
+<p class="eqlab">驗算</p><div class="eqs">\[\begin{aligned} H &= \bar v\, t = \dfrac{30 + 0}{2} \times 3 \\ &= 45\ \text{m} \end{aligned}\]</div>
+<p>答案 <span class="ans">(B)</span>。</p>`
+  },
+  { tag:'水平拋射', title:'懸崖丟石子',
+    stem:M`在高度 <b>45 公尺</b>高的海邊懸崖頂端，某生將一石子以水平初速度 <b>\(v_0 = 12\) m/s</b> 拋出。取重力加速度 g = 10 m/s² 且忽略空氣阻力。試問石子自拋出至落入海面需時幾秒？落海點與懸崖底部的水平距離（水平射程）為多少公尺？`,
+    options:['落地時間 2 秒，水平距離 24 公尺','落地時間 3 秒，水平距離 36 公尺','落地時間 3 秒，水平距離 45 公尺','落地時間 4.5 秒，水平距離 54 公尺'], ans:1,
+    optFb:{0:M`時間要從高度 45 m 求出來，\(45 = 5t^2\)，\(t\) 是多少？`,2:'時間對了，但 45 是懸崖高度，不是水平距離。',3:M`時間是由哪個方向的運動決定的？代入 \(45 = \dfrac{1}{2} \times 10 \times t^2\) 再算一次。`},
+    steps:[
+      {t:'mc',q:'水平拋射可以拆成哪兩種運動？',c:['水平等速 + 鉛直自由落體','水平自由落體 + 鉛直等速','兩個方向都是等加速度'],a:0,h:{1:'重力在哪個方向？',2:'水平方向有受力嗎？'},ok:M`兩個方向各算各的，只共用時間 \(t\)。`},
+      {t:'mc',q:'落海時間由哪個方向決定？',c:['鉛直方向（高度 45 m）','水平方向（12 m/s）','兩個方向都要用'],a:0,h:{1:'水平拋得更快，會更快掉進海裡嗎？參考第 3 組的兩球動畫。',2:'只看能告訴我們「什麼時候到海面」的那個方向。'},ok:'鉛直方向就是自由落體。'},
+      {t:'num',q:M`\(45 = \dfrac{1}{2} \times 10 \times t^2\)，\(t\) = ？`,a:3,u:'s',h:M`\(45 = 5t^2\)，\(t^2 = 9\)。`,ok:'時間完成。'},
+      {t:'num',q:M`水平射程 \(x = v_0 t\) = ？`,a:36,u:'m',h:M`水平方向等速：\(12 \times t\)。`,ok:'射程完成。'},
+    ],
+    sim:{type:'proj',h:45,v0:12,ang:0,strobe:0.5,cliff:true},
+    dg:{kind:'cliff',h:'h = 45 m',v0:'v₀ = 12 m/s',ask:['t = ?','x = ?']},
+    sol:M`<p class="eqlab">鉛直方向（自由落體）</p><div class="eqs">\[\begin{aligned} h &= \dfrac{1}{2} g t^2 \\ 45 &= \dfrac{1}{2} \times 10 \times t^2 \\ t^2 &= 9 \\ t &= 3\ \text{s} \end{aligned}\]</div>
+<p class="eqlab">水平方向（等速）</p><div class="eqs">\[\begin{aligned} x &= v_0 t \\ &= 12 \times 3 \\ &= 36\ \text{m} \end{aligned}\]</div>
+<p>答案 <span class="ans">(B)</span>。</p>`
+  },
+  { tag:'鉛直上拋', title:'上拋 4 秒在哪裡',
+    stem:M`將一石子自地面以初速度 <b>\(v_0 = 30\) m/s</b> 鉛直向上拋出。若重力加速度 g = 10 m/s²（設向上為正）：`,
+    subs:['石子上升的最大高度 H 為多少？','石子從拋出到回到地面所需的總飛行時間 T 為多少？','石子在 t = 4 s 時的位置（高度）與速度各為何？'],
+    note:'原題選項欄重複了題目，這裡改成問答題。',
+    options:null,
+    steps:[
+      {t:'mc',q:M`設向上為正，加速度 \(a\) = ？`,c:['−10 m/s²','+10 m/s²','0'],a:0,h:{1:'重力向上嗎？',2:'石子在空中速度一直在變。'},ok:'正負號定好，後面就不會錯。'},
+      {t:'num',q:M`最大高度 \(H = \dfrac{v_0^{\,2}}{2g}\) = ？`,a:45,u:'m',h:M`\(\dfrac{900}{20}\)。`,ok:'第 1 問完成。'},
+      {t:'num',q:M`總飛行時間 \(T\) = ？`,a:6,u:'s',h:M`上升時間 \(= \dfrac{v_0}{g}\)，上升與下降對稱。`,ok:'第 2 問完成。'},
+      {t:'mc',q:'t = 4 s 時，石子正在上升還是下降？',c:['下降','上升','剛好在最高點'],a:0,h:{1:'最高點是在第幾秒？4 秒在它之前還是之後？',2:'最高點在 t = 3 s。'},ok:'所以速度應該是負的。'},
+      {t:'num',q:M`t = 4 s 的高度 \(y = v_0 t - \dfrac{1}{2} g t^2\) = ？`,a:40,u:'m',h:M`\(30 \times 4 - \dfrac{1}{2} \times 10 \times 4^2\)。`,ok:'高度完成。'},
+      {t:'num',q:M`t = 4 s 的速度 \(v = v_0 - g t\) = ？`,a:-10,u:'m/s',h:M`\(30 - 10 \times 4\)，注意正負號。`,ok:'負號代表速度向下，大小 10 m/s。'},
+    ],
+    sim:{type:'fall',h:0,v0:30,strobe:1,stops:[3,4],vec:true},
+    dg:{kind:'up',v0:'v₀ = 30 m/s',ask:['H = ?','T = ?','t = 4 s 時 y、v = ?']},
+    sol:M`<p>設向上為正，\(a = -10\ \text{m/s}^2\)。</p>
+<p class="eqlab">1. 最大高度</p><div class="eqs">\[\begin{aligned} H &= \dfrac{v_0^{\,2}}{2g} = \dfrac{30^2}{2 \times 10} \\ &= 45\ \text{m} \end{aligned}\]</div>
+<p class="eqlab">2. 總飛行時間</p><div class="eqs">\[\begin{aligned} t_{\text{上}} &= \dfrac{v_0}{g} = \dfrac{30}{10} = 3\ \text{s} \\ T &= 2 \times 3 = 6\ \text{s} \end{aligned}\]</div>
+<p class="eqlab">3. t = 4 s 的位置與速度</p><div class="eqs">\[\begin{aligned} y &= v_0 t - \dfrac{1}{2} g t^2 \\ &= 30 \times 4 - \dfrac{1}{2} \times 10 \times 4^2 \\ &= 120 - 80 = 40\ \text{m} \end{aligned}\]</div>
+<div class="eqs">\[\begin{aligned} v &= v_0 - g t \\ &= 30 - 10 \times 4 \\ &= -10\ \text{m/s} \end{aligned}\]</div>
+<p>速度大小 10 m/s，方向向下。t = 4 s 已過最高點 1 秒，正好和 t = 2 s 在同一高度（40 m），速率也同為 10 m/s，只是方向相反。</p>`
+  }],
+  teacher:[]
+},
+{ id:5, name:'第 5 組', members:'',
+  qs:[
+  { tag:'等加速度運動', title:'第 2 秒內的位移',
+    stem:'一質點自靜止出發作等加速度直線運動，若已知其在「第 1 秒內」（0～1 秒）所前進的位移為 <b>3 公尺</b>，則該質點在「第 2 秒內」（1～2 秒）前進的位移應為多少公尺？',
+    note:'原題有辨識錯字（「為了 公尺」應為 3 公尺），選項寫在題幹中，已整理。',
+    options:['3 公尺','4.5 公尺','6 公尺','9 公尺'], ans:3,
+    optFb:{0:'每秒走一樣遠，是等速度運動。這是等「加速度」運動。',1:M`4.5 怎麼來的？先用第 1 秒的資料把 \(a\) 求出來。`,2:M`6 是不是你算出的加速度 \(a\)？「第 2 秒內」問的是 1～2 秒這段的位移。`},
+    steps:[
+      {t:'mc',q:'「第 1 秒內」和「前 2 秒內」有什麼不同？',c:['第 1 秒內是 0～1 s；前 2 秒內是 0～2 s','兩者一樣','第 1 秒內是 1～2 s'],a:0,h:{1:'題目有用括號寫出時間範圍。',2:'第 1 秒是從 0 開始。'},ok:'「第 2 秒內」= 前 2 秒 − 前 1 秒。'},
+      {t:'num',q:M`由 \(s = \dfrac{1}{2} a t^2\)，第 1 秒內 \(3 = \dfrac{1}{2} \times a \times 1^2\)，\(a\) = ？`,a:6,u:'m/s²',h:M`\(3 = \dfrac{1}{2} a\)，兩邊乘 2。`,ok:'加速度求出來了。'},
+      {t:'num',q:M`前 2 秒共走 \(s = \dfrac{1}{2} \times a \times 2^2\) = ？`,a:12,u:'m',h:M`\(\dfrac{1}{2} \times 6 \times 4\)。`,ok:'這是 0～2 s 的總位移。'},
+      {t:'num',q:'第 2 秒內（1～2 s）的位移 = ？',a:9,u:'m',h:'前 2 秒總位移 − 第 1 秒內位移。',ok:'動畫中第二段間距大約是第一段的幾倍？'},
+      {t:'mc',q:'靜止出發的等加速度運動，連續每 1 秒內的位移比是？',c:['1 : 3 : 5 : 7…','1 : 2 : 3 : 4…','1 : 4 : 9 : 16…'],a:0,h:{1:'這是等速度才會出現的比例嗎？算一下 3、9 的比。',2:'這是「累積」位移的比，不是「每一秒內」的比。'},ok:'這也能幫你快速驗算。'},
+    ],
+    sim:{type:'line',a:6,T:4},
+    dg:{kind:'line'},
+    sol:M`<p class="eqlab">由第 1 秒內求加速度</p><div class="eqs">\[\begin{aligned} s_1 &= \dfrac{1}{2} a t^2 \\ 3 &= \dfrac{1}{2} \times a \times 1^2 \\ a &= 6\ \text{m/s}^2 \end{aligned}\]</div>
+<p class="eqlab">前 2 秒總位移，再扣掉第 1 秒內</p><div class="eqs">\[\begin{aligned} s_2 &= \dfrac{1}{2} \times 6 \times 2^2 = 12\ \text{m} \\ \Delta s &= s_2 - s_1 \\ &= 12 - 3 = 9\ \text{m} \end{aligned}\]</div>
+<p>快速法：每秒內位移比 1 : 3 : 5…，所以 \(3 \times 3 = 9\) m。答案 <span class="ans">(D)</span>。</p>`
+  },
+  { tag:'自由落體', title:'累積落下距離比',
+    stem:M`一石子自高處由靜止自由釋放落下作自由落體運動，根據公式 \(h = \dfrac{1}{2} g t^2\)，石子在「第 1 秒末」、「第 2 秒末」、「第 3 秒末」所累積的「下落總距離比」為何？`,
+    note:M`原題公式辨識為「h=豈gt」，已改為 \(h = \dfrac{1}{2} g t^2\)。`,
+    options:['1 : 2 : 3','1 : 3 : 5','1 : 8 : 27','1 : 4 : 9'], ans:3,
+    optFb:{0:M`\(h\) 和 \(t\) 是「正比」嗎？公式裡 \(t\) 有平方。`,1:'這是「第 1 秒內、第 2 秒內、第 3 秒內」的比。題目問的是「累積總距離」。',2:M`公式是 \(t^2\) 還是 \(t^3\)？`},
+    steps:[
+      {t:'mc',q:'「第 2 秒末的累積下落距離」指的是？',c:['從 0 到 2 秒共落下的距離','從 1 到 2 秒這一秒落下的距離','第 2 秒末的速度'],a:0,h:{1:'這是「第 2 秒內」的距離，題目說「累積」。',2:'題目問的是距離。'},ok:'累積 = 從出發算起。'},
+      {t:'mc',q:M`由 \(h = \dfrac{1}{2} g t^2\)，\(h\) 與 \(t\) 的關係？`,c:[M`\(h\) 與 \(t^2\) 成正比`,M`\(h\) 與 \(t\) 成正比`,M`\(h\) 與 \(t^3\) 成正比`],a:0,h:{1:M`公式裡 \(t\) 的次方是多少？`,2:M`公式裡 \(t\) 的次方是多少？`},ok:M`\(t\) 變 2 倍，\(h\) 變幾倍？`},
+      {t:'num',q:M`\(t\) = 1、2、3 秒時 \(h\) 依序為 5、20、？`,a:45,u:'m',h:M`\(\dfrac{1}{2} \times 10 \times 3^2\)。`,ok:'把 5 : 20 : 45 化成最簡比。'},
+    ],
+    sim:{type:'fall',h:50,v0:0,strobe:1,stops:[1,2,3]},
+    dg:{kind:'drop',h:'高處',v0:'v₀ = 0',ask:['h₁ : h₂ : h₃ = ?']},
+    sol:M`<div class="eqs">\[\begin{aligned} h_1 &= \dfrac{1}{2} \times 10 \times 1^2 = 5\ \text{m} \\ h_2 &= \dfrac{1}{2} \times 10 \times 2^2 = 20\ \text{m} \\ h_3 &= \dfrac{1}{2} \times 10 \times 3^2 = 45\ \text{m} \end{aligned}\]</div>
+<div class="eqs">\[\begin{aligned} h_1 : h_2 : h_3 &= 5 : 20 : 45 \\ &= 1 : 4 : 9 \end{aligned}\]</div>
+<p>答案 <span class="ans">(D)</span>。延伸：每秒內距離比 5 : 15 : 25 = 1 : 3 : 5（選項 B），兩種比例要分清楚。</p>`
+  },
+  { tag:'拋體觀念', title:'拋體觀念判斷',
+    stem:'將物體以不同的初速度拋出，並忽略空氣阻力，下列哪一個敘述正確？',
+    options:['初速度越大，重力加速度越大','水平拋射時，水平方向的速度會逐漸變小','斜向拋射到達最高點時，速度方向水平，加速度方向向下','自由落體運動的速度始終不變'], ans:2,
+    optFb:{0:'丟得快一點，地球的重力會變大嗎？',1:'水平方向有受力嗎？打開動畫的頻閃點，看水平間距。',3:'自由落體的頻閃點間距是固定的嗎？'},
+    steps:[
+      {t:'mc',q:M`重力加速度 \(g\) 和物體的初速度有關嗎？`,c:[M`無關，\(g\) 只和地球（所在位置）有關`,M`有關，初速度越大 \(g\) 越大`,M`有關，初速度越大 \(g\) 越小`],a:0,h:{1:'不同速度丟出的球，落下時的加速度有不同嗎？',2:'不同速度丟出的球，落下時的加速度有不同嗎？'},ok:'(A) 可以判斷了。'},
+      {t:'mc',q:'忽略空阻時，水平拋射的水平方向受力情形？',c:['不受力，水平速度不變','受重力，水平速度變小','受推力，水平速度變大'],a:0,h:{1:'重力是哪個方向？',2:'離手後還有推力嗎？'},ok:'(B) 可以判斷了。'},
+      {t:'mc',q:'斜向拋射到最高點時，速度剩下哪個分量？',c:[M`只剩水平分量 \(v_x\)`,M`只剩鉛直分量 \(v_y\)`,'都是 0'],a:0,h:{1:'最高點的意思是鉛直方向不再上升。',2:'水平方向沒有加速度，水平速度會變 0 嗎？'},ok:'打開動畫的向量看看最高點的箭頭。'},
+      {t:'mc',q:'自由落體的速度如何變化？',c:['越來越快','保持不變','越來越慢'],a:0,h:{1:'速度不變就不會越落越快了。',2:'重力向下、運動向下。'},ok:'四個選項都檢查完了。'},
+    ],
+    sim:{type:'proj',h:0,v0:20,ang:55,strobe:0.25,vec:true,pauseTop:true},
+    dg:{kind:'oblique',v0:'v₀',ang:'θ',ask:['最高點的 v、a 方向？']},
+    sol:M`<ul class="sol-list"><li>(A) ✗ \(g\) 與初速度無關</li><li>(B) ✗ 水平方向不受力，水平速度保持不變</li><li>(C) ✓ 最高點 \(v_y = 0\)，只剩水平速度 \(v_x\)；加速度仍為 \(g\) 向下</li><li>(D) ✗ 自由落體速度每秒增加 10 m/s</li></ul>
+<p>答案 <span class="ans">(C)</span>。</p>`
+  }],
+  teacher:[]
+},
+{ id:6, name:'第 6 組', members:'',
+  qs:[
+  { tag:'自由落體', title:'牛頓管',
+    stem:'在著名的牛頓管（抽真空玻璃長管）實驗中，將一片羽毛與一枚較厚重的金屬錢幣同時由管頂釋放落下。若管內已抽成高度真空（忽略空氣阻力），則觀察到的現象與結論何者正確？',
+    options:['錢幣較重，故錢幣會明顯比羽毛先落到底部','羽毛較輕受重力較小，故羽毛下落加速度比錢幣大','兩者雖然同時落地，但錢幣落地瞬間的瞬時速度較大','兩者同時落到底部，證明無空氣阻力時落體加速度與質量無關'], ans:3,
+    optFb:{0:'在動畫中切換到「真空」，錢幣真的比較快嗎？',1:M`羽毛受的重力小，但質量也小，\(a = \dfrac{F}{m}\) 會怎樣？`,2:M`加速度一樣、時間一樣，\(v = gt\) 會不一樣嗎？`},
+    steps:[
+      {t:'mc',q:'在空氣中，羽毛比錢幣落得慢的主要原因是？',c:['空氣阻力對羽毛的影響大','羽毛受的重力加速度比較小','羽毛的質量太小，所以重力加速度為 0'],a:0,h:{1:'先切換到「有空氣」看一下，再切換到「真空」比較。',2:'羽毛還是會掉下來。'},ok:'所以把空氣抽掉後……'},
+      {t:'mc',q:'抽成真空後，兩個物體受到哪些力？',c:['只有重力','重力和空氣阻力','不受力'],a:0,h:{1:'沒有空氣了。',2:'不受力的話，東西會飄著嗎？'},ok:'兩者都只受重力。'},
+      {t:'mc',q:M`錢幣的重力比較大，但質量也比較大。由 \(a = \dfrac{F}{m} = \dfrac{mg}{m}\)，兩者的加速度？`,c:[M`相同，都是 \(g\)`,'錢幣比較大','羽毛比較大'],a:0,h:{1:M`把 \(\dfrac{mg}{m}\) 約分看看。`,2:M`把 \(\dfrac{mg}{m}\) 約分看看。`},ok:'加速度與質量無關。'},
+      {t:'mc',q:'同時從同一高度落下、加速度相同，著地時的速度？',c:['相同','錢幣較大','羽毛較大'],a:0,h:{1:M`\(v = gt\)，\(g\) 和 \(t\) 都一樣。`,2:M`\(v = gt\)，\(g\) 和 \(t\) 都一樣。`},ok:'時間與速度都相同。'},
+    ],
+    sim:{type:'tube'},
+    dg:{kind:'tube'},
+    sol:M`<p>真空中兩者只受重力：</p>
+<div class="eqs">\[\begin{aligned} a &= \dfrac{F}{m} = \dfrac{mg}{m} \\ &= g \end{aligned}\]</div>
+<p>加速度與質量無關。同高度、同加速度、同初速 → 同時到底，\(v = gt\) 也相同。(A)(B)(C) 錯，(D) 正確，答案 <span class="ans">(D)</span>。</p>`
+  },
+  { tag:'鉛直下拋', title:'下拋的加速度',
+    stem:M`某人自大樓天台將一小球以初速度 <b>\(v_0 = 10\) m/s</b>「鉛直向下拋出」（鉛直下拋）。若忽略空氣阻力，且 g = 10 m/s²，則小球離手後在空中落下運動的過程中，其加速度大小與方向為何？`,
+    note:M`原題中 \(v_0\) 與 \(g\) 的符號在送出時遺失，這裡以 \(v_0 = 10\) m/s、\(g = 10\) m/s² 補上。`,
+    options:['大於 g，且方向鉛直向下','大於 g，且方向鉛直向上','等於 g，且方向鉛直向下','隨下落速度增加而持續變大'], ans:2,
+    optFb:{0:'是用力往下丟，所以加速度比較大？力是在手裡才有作用，還是離手後也有？',1:'方向和重力方向一樣嗎？',3:'速度變大和加速度變大是同一件事嗎？打開向量看看 a 箭頭的長度。'},
+    steps:[
+      {t:'mc',q:'小球離手後，手的推力還作用在球上嗎？',c:['不會，離手就沒有了','會，一直推著球','會，但越來越小'],a:0,h:{1:'手已經沒碰到球了。',2:'手已經沒碰到球了。'},ok:'推力只決定了「初速度」。'},
+      {t:'mc',q:'離手後只受重力，加速度是？',c:[M`\(g\)，鉛直向下`,M`比 \(g\) 大`,M`比 \(g\) 小`],a:0,h:{1:M`加速度 \(= \dfrac{\text{合力}}{\text{質量}}\)，合力只有 \(mg\)。`,2:M`加速度 \(= \dfrac{\text{合力}}{\text{質量}}\)，合力只有 \(mg\)。`},ok:'和自由落體、上拋的加速度都一樣。'},
+      {t:'mc',q:'初速度 10 m/s 向下，會影響什麼？',c:['速度的起始值（每一刻的速度都比自由落體多 10 m/s）','加速度的大小','加速度的方向'],a:0,h:{1:M`\(v = v_0 + g t\)，\(v_0\) 加在哪裡？`,2:M`\(v = v_0 + g t\)，\(v_0\) 加在哪裡？`},ok:'初速度改變速度，不改變加速度。'},
+    ],
+    sim:{type:'fall',h:60,v0:-10,strobe:0.5,vec:true},
+    dg:{kind:'drop',h:'大樓天台',v0:'v₀ = 10 m/s ↓',ask:['a = ?（大小、方向）']},
+    sol:M`<p>手的推力只在接觸時作用，決定的是初速度。離手後小球只受重力（取向下為正）：</p>
+<div class="eqs">\[\begin{aligned} a &= \dfrac{F}{m} = \dfrac{mg}{m} \\ &= g = 10\ \text{m/s}^2\ (\text{向下}) \end{aligned}\]</div>
+<div class="eqs">\[\begin{aligned} v &= v_0 + g t \\ &= 10 + 10t \end{aligned}\]</div>
+<p>速度越來越快，但加速度固定不變。答案 <span class="ans">(C)</span>。</p>`
+  },
+  { tag:'鉛直上拋', title:'兩次經過 40 m',
+    stem:'將一小球自地面以 <b>30 m/s</b> 的初速度鉛直向上拋出。不計空氣阻力，重力加速度 g = 10 m/s²。請問：小球在拋出後幾秒，其位置會剛好在距離地面 <b>40 公尺</b>高的地方？',
+    note:'原題選項欄最後寫了「答案 D」，正式出題時要拿掉。',
+    options:['2 秒','4 秒','1 秒 或 5 秒','2 秒 或 4 秒'], ans:3,
+    optFb:{0:'這只是其中一次。小球經過 40 m 高度只有一次嗎？看動畫。',1:'這只是其中一次，上升時有沒有也經過 40 m？',2:M`把 \(t = 1\) 代入 \(y = 30t - 5t^2\)，高度是 40 m 嗎？`},
+    steps:[
+      {t:'mc',q:'設向上為正，高度與時間的關係式是？',c:[M`\(y = 30t - 5t^2\)`,M`\(y = 30t + 5t^2\)`,M`\(y = 5t^2\)`],a:0,h:{1:M`加速度向下，\(\dfrac{1}{2}gt^2\) 前面應該是什麼號？`,2:'這是自由落體，球有初速度。'},ok:M`接著令 \(y = 40\)。`},
+      {t:'mc',q:M`令 \(40 = 30t - 5t^2\)，整理成標準式？`,c:[M`\(t^2 - 6t + 8 = 0\)`,M`\(t^2 + 6t - 8 = 0\)`,M`\(t^2 - 6t - 8 = 0\)`],a:0,h:{1:'全部移到同一邊後同除以 5，注意正負號。',2:M`移項後：\(5t^2 - 30t + 40 = 0\)，再同除以 5。`},ok:'可以用十字交乘。'},
+      {t:'num',q:M`兩個解中，較小的 \(t\) = ？`,a:2,u:'s',h:'找兩數相乘 8、相加 6。',ok:'這是上升時經過。'},
+      {t:'num',q:M`較大的 \(t\) = ？`,a:4,u:'s',h:'同一組兩數中的另一個。',ok:'這是下降時經過。'},
+      {t:'mc',q:'為什麼會有兩個時間？',c:['上升時經過一次、下降時又經過一次','其中一個是不合理的解','因為加速度改變了方向'],a:0,h:{1:'兩個解都在 0～6 s 的飛行時間內，代回去都成立。',2:'加速度全程都向下。'},ok:'兩個時間對稱分布在最高點（3 s）兩側。'},
+    ],
+    sim:{type:'fall',h:0,v0:30,strobe:0.5,mark:40},
+    dg:{kind:'up',v0:'v₀ = 30 m/s',mark:'40 m',ask:['t = ?']},
+    sol:M`<div class="eqs">\[\begin{aligned} y &= v_0 t - \dfrac{1}{2} g t^2 \\ 40 &= 30t - 5t^2 \\ 5t^2 - 30t + 40 &= 0 \\ t^2 - 6t + 8 &= 0 \\ (t - 2)(t - 4) &= 0 \end{aligned}\]</div>
+<p>\(t = 2\) s（上升經過）或 \(t = 4\) s（下降經過）。兩個時刻對稱分布在最高點 t = 3 s 的兩側。答案 <span class="ans">(D)</span>。</p>`
+  }],
+  teacher:[]
+}
+];
+
+/* ===================== 公式排版 ===================== */
+const TEX_OPTS={delimiters:[{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false,strict:'ignore'};
+function tex(el){ if(el && window.renderMathInElement){ try{ renderMathInElement(el,TEX_OPTS); }catch(e){ console.error(e); } } }
+
+/* ===================== 狀態 ===================== */
+const state = {}; // key g-q → {step, solved:[], answered:false, chosen:[]}
+function st(g,q){const k=g+'-'+q; return state[k]||(state[k]={step:0,answered:false,wrongOpts:[],free:false});}
+const solOpen = {};
+const L = 'ABCD';
+const qNum = [8,9,10];
+
+/* ===================== 示意圖 ===================== */
+function arrow(x1,y1,x2,y2,cls){const a=Math.atan2(y2-y1,x2-x1),h=9;
+  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="${cls}" stroke-width="2.5"/><path d="M${x2},${y2} L${x2-h*Math.cos(a-0.4)},${y2-h*Math.sin(a-0.4)} L${x2-h*Math.cos(a+0.4)},${y2-h*Math.sin(a+0.4)}Z" class="${cls}"/>`;}
+function dim(x,y1,y2,label,side){const tx=side==='l'?x-8:x+8,anc=side==='l'?'end':'start';
+  return `<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" class="sv-mut" stroke-dasharray="4 3"/><line x1="${x-6}" y1="${y1}" x2="${x+6}" y2="${y1}" class="sv-mut"/><line x1="${x-6}" y1="${y2}" x2="${x+6}" y2="${y2}" class="sv-mut"/><text x="${tx}" y="${(y1+y2)/2+5}" text-anchor="${anc}" class="sv-txt">${label}</text>`;}
+function ground(y){let s=`<line x1="10" y1="${y}" x2="350" y2="${y}" class="sv-ink" stroke-width="2"/>`;for(let x=14;x<350;x+=14)s+=`<line x1="${x}" y1="${y}" x2="${x-8}" y2="${y+8}" class="sv-mut"/>`;return s;}
+function gArrow(x,y){return arrow(x,y,x,y+44,'sv-blue')+`<text x="${x+8}" y="${y+30}" class="sv-txt" style="fill:var(--blue)">g</text>`;}
+function asks(list,x,y){return list.map((t,i)=>`<text x="${x}" y="${y+i*24}" class="sv-ask">${t}</text>`).join('');}
+function diagram(d){
+  let s='';
+  if(d.kind==='drop'){
+    s+=`<rect x="40" y="60" width="80" height="170" class="sv-fill"/>`;for(let y=76;y<220;y+=26)s+=`<rect x="54" y="${y}" width="16" height="14" class="sv-mut"/><rect x="88" y="${y}" width="16" height="14" class="sv-mut"/>`;
+    s+=ground(230)+`<circle cx="136" cy="52" r="8" class="sv-acc"/>`;
+    s+=`<line x1="136" y1="64" x2="136" y2="226" class="sv-mut" stroke-dasharray="3 5"/>`;
+    if(d.v0&&d.v0.includes('↓'))s+=arrow(150,48,150,88,'sv-acc')+`<text x="158" y="76" class="sv-txt" style="fill:var(--accent)">${d.v0.replace(' ↓','')}</text>`;
+    else s+=`<text x="152" y="50" class="sv-txt">${d.v0}</text>`;
+    s+=dim(196,60,230,d.h,'r');s+=gArrow(320,40);s+=asks(d.ask,196,206-24*(d.ask.length-1)>150?206-24*(d.ask.length-1):150);
+  } else if(d.kind==='up'){
+    s+=ground(230)+`<circle cx="120" cy="220" r="8" class="sv-acc"/>`+arrow(140,214,140,160,'sv-acc')+`<text x="148" y="186" class="sv-txt" style="fill:var(--accent)">${d.v0}</text>`;
+    s+=`<line x1="120" y1="210" x2="120" y2="52" class="sv-mut" stroke-dasharray="3 5"/><circle cx="120" cy="44" r="8" fill="none" class="sv-mut" stroke-dasharray="3 3"/><text x="64" y="40" class="sv-txt">最高點</text>`;
+    if(d.top)s+=`<text x="40" y="130" class="sv-txt">${d.top}</text>`;
+    if(d.mark){s+=`<line x1="40" y1="88" x2="250" y2="88" class="sv-acc" stroke-dasharray="6 4" stroke-width="1.5"/><text x="254" y="93" class="sv-txt" style="fill:var(--accent)">${d.mark}</text>`;}
+    s+=dim(80,44,222,'','l');s+=gArrow(320,40);s+=asks(d.ask,196,d.mark?130:110);
+  } else if(d.kind==='oblique'){
+    s+=ground(230)+`<path d="M50,228 Q180,-60 310,228" class="sv-mut" stroke-dasharray="5 5"/><circle cx="50" cy="222" r="8" class="sv-acc"/>`+arrow(50,222,98,174,'sv-acc')+`<text x="102" y="172" class="sv-txt" style="fill:var(--accent)">${d.v0}</text>`;
+    s+=`<path d="M78,222 A28,28 0 0 0 70,202" class="sv-ink" stroke-width="1.5"/><text x="84" y="214" class="sv-txt">${d.ang}</text>`;
+    s+=dim(180,84,228,'','r')+`<line x1="50" y1="244" x2="310" y2="244" class="sv-mut" stroke-dasharray="4 3"/>`;
+    s+=gArrow(320,40);s+=asks(d.ask,192,140);
+  } else if(d.kind==='cliff'){
+    s+=`<path d="M10,90 L120,90 L120,230 L10,230Z" class="sv-fill"/><path d="M120,230 Q160,222 200,230 T280,230 T350,230" class="sv-blue" fill="none" stroke-width="2"/><text x="250" y="250" class="sv-txt" style="fill:var(--blue)">海面</text>`;
+    s+=`<circle cx="120" cy="82" r="8" class="sv-acc"/>`+arrow(134,82,184,82,'sv-acc')+`<text x="140" y="72" class="sv-txt" style="fill:var(--accent)">${d.v0}</text><path d="M128,84 Q240,90 290,226" class="sv-mut" stroke-dasharray="5 5"/>`;
+    s+=dim(100,90,230,d.h,'l')+`<line x1="120" y1="240" x2="290" y2="240" class="sv-mut" stroke-dasharray="4 3"/>`;
+    s+=gArrow(320,30);s+=asks(d.ask,180,140);
+  } else if(d.kind==='pair'){
+    s+=`<rect x="30" y="60" width="80" height="170" class="sv-fill"/>`+ground(230);
+    s+=`<circle cx="118" cy="52" r="8" class="sv-acc"/><text x="102" y="38" class="sv-txt">A</text><line x1="118" y1="62" x2="118" y2="226" class="sv-mut" stroke-dasharray="3 5"/>`;
+    s+=`<circle cx="140" cy="52" r="8" class="sv-blue"/><text x="148" y="40" class="sv-txt">B</text>`+arrow(152,52,196,52,'sv-blue')+`<text x="200" y="57" class="sv-txt" style="fill:var(--blue)">15 m/s</text><path d="M146,56 Q250,62 300,226" class="sv-mut" stroke-dasharray="5 5"/>`;
+    s+=`<text x="40" y="250" class="sv-txt">A：靜止釋放　B：水平拋出（同時、同高）</text>`;s+=asks(['誰先落地？','誰較快？'],210,140);
+  } else if(d.kind==='tube'){
+    s+=`<rect x="150" y="28" width="60" height="200" rx="10" class="sv-ink" stroke-width="2"/><ellipse cx="166" cy="50" rx="10" ry="4" class="sv-mut" transform="rotate(-20 166 50)"/><line x1="158" y1="54" x2="174" y2="46" class="sv-mut"/><circle cx="194" cy="50" r="7" class="sv-acc"/>`;
+    s+=`<text x="132" y="50" text-anchor="end" class="sv-txt">羽毛</text><text x="222" y="54" class="sv-txt">錢幣</text><line x1="150" y1="200" x2="90" y2="200" class="sv-ink" stroke-width="2"/><rect x="50" y="186" width="40" height="28" class="sv-fill"/><text x="70" y="232" text-anchor="middle" class="sv-txt">抽氣</text><text x="180" y="248" text-anchor="middle" class="sv-txt">管內：真空</text>`;
+    s+=gArrow(300,40);s+=asks(['誰先到底？','速度呢？'],240,140);
+  } else if(d.kind==='line'){
+    const xs=[40,72,166,324];
+    s+=`<line x1="20" y1="170" x2="345" y2="170" class="sv-ink" stroke-width="2"/><rect x="28" y="146" width="26" height="22" rx="3" class="sv-acc"/>`;
+    xs.forEach((x,i)=>{s+=`<line x1="${x}" y1="164" x2="${x}" y2="178" class="sv-ink"/><text x="${x}" y="196" text-anchor="middle" class="sv-txt">${i} s</text>`});
+    s+=`<path d="M40,130 Q56,118 72,130" class="sv-mut"/><text x="56" y="112" text-anchor="middle" class="sv-txt">3 m</text><path d="M72,130 Q119,100 166,130" class="sv-mut"/><text x="119" y="100" text-anchor="middle" class="sv-ask">? m</text>`;
+    s+=`<text x="40" y="226" class="sv-txt">v₀ = 0，加速度固定　第 1 秒內 3 m，第 2 秒內 ?</text>`+arrow(250,130,300,130,'sv-blue')+`<text x="262" y="122" class="sv-txt" style="fill:var(--blue)">a</text>`;
+  }
+  return `<svg viewBox="0 0 360 260" role="img" aria-label="題目示意圖">${s}</svg>`;
+}
+
+/* ===================== 模擬 ===================== */
+const G10=10;
+function model(c){
+  if(c.type==='fall'||c.type==='proj'){
+    const th=c.type==='proj'?c.ang*Math.PI/180:Math.PI/2, vx=c.type==='proj'?c.v0*Math.cos(th):0, vy=c.type==='proj'?c.v0*Math.sin(th):c.v0;
+    const T=(vy+Math.sqrt(vy*vy+2*G10*c.h))/G10;
+    const ymax=c.h+(vy>0?vy*vy/(2*G10):0);
+    return {T,vy0:vy,vx0:vx,bodies:t=>[{x:vx*t,y:c.h+vy*t-5*t*t,vx,vy:vy-G10*t,ax:0,ay:-G10,col:'acc'}],xmax:vx*T,ymax};
+  }
+  if(c.type==='pair'){const T=Math.sqrt(2*c.h/G10);
+    return {T,vy0:0,bodies:t=>[{x:0,y:c.h-5*t*t,vx:0,vy:-G10*t,ax:0,ay:-G10,col:'acc',lab:'A'},{x:c.vx*t,y:c.h-5*t*t,vx:c.vx,vy:-G10*t,ax:0,ay:-G10,col:'blue',lab:'B'}],xmax:c.vx*T,ymax:c.h};}
+  if(c.type==='line'){return {T:c.T,vy0:0,bodies:t=>[{x:.5*c.a*t*t,y:0,vx:c.a*t,vy:0,ax:c.a,ay:0,col:'acc'}],xmax:.5*c.a*c.T*c.T,ymax:0};}
+}
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+
+const n2=v=>(Math.abs(v)<0.005?0:v).toFixed(2).replace('-','−');
+const par=v=>v<0?`(${n2(v)})`:n2(v);
+const FR=(a,b)=>`<span class="fr"><i>${a}</i><i>${b}</i></span>`;
+const HALF=FR(1,2);
+const V=(s)=>`<i>v</i><sub>${s}</sub>`;
+function readout(c,m,t){
+  const ts=n2(t), L=[];
+  if(c.type==='line'){
+    const p=m.bodies(t)[0];
+    L.push(`<div class="ro-h">由靜止出發，<i>a</i> = ${c.a} m/s²，<i>t</i> = ${ts} s</div>`);
+    L.push(`<div>位移 <i>x</i> = ${HALF}<i>at</i>² = ${HALF} × ${c.a} × ${ts}² = <b>${n2(p.x)}</b> m</div>`);
+    L.push(`<div>速度 <i>v</i> = <i>at</i> = ${c.a} × ${ts} = <b>${n2(p.vx)}</b> m/s</div>`);
+    const k=Math.floor(t+1e-9); if(k>=1){const x1=.5*c.a*(k-1)**2,x2=.5*c.a*k*k;
+      L.push(`<div>第 ${k} 秒內位移 = <i>x</i>(${k}) − <i>x</i>(${k-1}) = ${n2(x2)} − ${n2(x1)} = <b>${n2(x2-x1)}</b> m</div>`);}
+    return L.join('');
+  }
+  L.push(`<div class="ro-h">向上為正，<i>g</i> = 10 m/s²，<i>t</i> = ${ts} s</div>`);
+  if(c.type==='pair'){
+    const [A,B]=m.bodies(t);
+    L.push(`<div><b class="ro-k">A、B 鉛直</b><i>y</i> = <i>h</i> − ${HALF}<i>gt</i>² = ${n2(c.h)} − ${HALF} × 10 × ${ts}² = <b>${n2(A.y)}</b> m</div>`);
+    L.push(`<div><b class="ro-k">A、B 鉛直</b>${V('y')} = −<i>gt</i> = −10 × ${ts} = <b>${n2(A.vy)}</b> m/s</div>`);
+    L.push(`<div><b class="ro-k">B 水平</b><i>x</i> = ${V('0x')}<i>t</i> = ${n2(c.vx)} × ${ts} = <b>${n2(B.x)}</b> m，${V('x')} = ${V('0x')} = ${n2(c.vx)} m/s</div>`);
+    L.push(`<div><b class="ro-k">速率</b><i>v</i><sub>A</sub> = |${V('y')}| = <b>${n2(Math.abs(A.vy))}</b> m/s；<i>v</i><sub>B</sub> = √(${V('x')}² + ${V('y')}²) = √(${n2(c.vx)}² + ${par(B.vy)}²) = <b>${n2(Math.hypot(B.vx,B.vy))}</b> m/s</div>`);
+    return L.join('');
+  }
+  const p=m.bodies(t)[0], vx0=m.vx0, vy0=m.vy0, h=c.h, horiz=c.type==='proj';
+  if(horiz) L.push(`<div><b class="ro-k">水平</b><i>x</i> = ${V('0x')}<i>t</i> = ${n2(vx0)} × ${ts} = <b>${n2(p.x)}</b> m</div>`);
+  const fy=(h?'<i>h</i> + ':'')+(vy0?`${V('0y')}<i>t</i> − `:'− ')+`${HALF}<i>gt</i>²`;
+  const sy=(h?`${n2(h)} + `:'')+(vy0?`${par(vy0)} × ${ts} − `:'− ')+`${HALF} × 10 × ${ts}²`;
+  L.push(`<div><b class="ro-k">鉛直</b><i>y</i> = ${fy} = ${sy} = <b>${n2(p.y)}</b> m</div>`);
+  if(horiz) L.push(`<div><b class="ro-k">水平</b>${V('x')} = ${V('0x')} = <b>${n2(vx0)}</b> m/s（水平不受力，速度不變）</div>`);
+  L.push(`<div><b class="ro-k">鉛直</b>${V('y')} = ${vy0?V('0y')+' − <i>gt</i>':'−<i>gt</i>'} = ${vy0?par(vy0)+' − ':'−'}10 × ${ts} = <b>${n2(p.vy)}</b> m/s</div>`);
+  if(horiz) L.push(`<div><b class="ro-k">速率</b><i>v</i> = √(${V('x')}² + ${V('y')}²) = √(${n2(p.vx)}² + ${par(p.vy)}²) = <b>${n2(Math.hypot(p.vx,p.vy))}</b> m/s</div>`);
+  if(vy0>0) L.push(`<div class="ro-note">最高點時刻 <i>t</i> = ${FR(V('0y'),'<i>g</i>')} = ${FR(n2(vy0),'10')} = ${n2(vy0/10)} s，最大高度 <i>H</i> = ${h?'<i>h</i> + ':''}${FR(V('0y')+'²','2<i>g</i>')} = <b>${n2(h+vy0*vy0/20)}</b> m</div>`);
+  return L.join('');
+}
+
+class Sim{
+  constructor(root,cfg){
+    this.c=cfg;this.root=root;this.t=0;this.play=false;this.speed=cfg.type==='tube'?0.25:1;this.air=false;
+    this.showStrobe=true;this.showVec=!!cfg.vec;this.showData=false;this.msg='';this.passed=new Set();
+    root.innerHTML=`<canvas class="sim"></canvas>
+      <div class="ctrls">
+        <button class="btn small" data-a="play">▶ 播放</button><button class="btn small ghost" data-a="reset">⟲ 重來</button>
+        <label>速度 <select data-a="speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1">1×</option></select></label>
+        ${cfg.type==='tube'?'<button class="btn small ghost" data-a="air">切換：真空</button>':''}
+        <label><input type="checkbox" data-a="strobe" checked> 頻閃點</label>
+        ${cfg.type!=='tube'?`<label><input type="checkbox" data-a="vec" ${cfg.vec?'checked':''}> 速度／加速度向量</label>`:''}
+        <label><input type="checkbox" data-a="data"> 顯示讀數與算式</label>
+      </div>
+      <div class="simmsg" aria-live="polite"></div><div class="readout"></div>`;
+    this.cv=root.querySelector('canvas');this.ctx=this.cv.getContext('2d');
+    this.msgEl=root.querySelector('.simmsg');this.roEl=root.querySelector('.readout');
+    root.querySelector('[data-a="speed"]').value=String(this.speed);
+    if(cfg.type==='tube'){this.air=false;}
+    this.m=cfg.type==='tube'?null:model(cfg);
+    root.addEventListener('click',e=>{const a=e.target.closest('[data-a]');if(!a)return;const k=a.dataset.a;
+      if(k==='play'){if(this.t>=this.end())this.reset();this.toggle();}
+      if(k==='reset')this.reset();
+      if(k==='air'){this.air=!this.air;a.textContent=this.air?'切換：真空':'切換：有空氣';this.reset();this.setMsg(this.air?'管內有空氣':'管內為真空');}
+    });
+    root.addEventListener('change',e=>{const k=e.target.dataset.a;
+      if(k==='speed')this.speed=+e.target.value; if(k==='strobe')this.showStrobe=e.target.checked;
+      if(k==='vec')this.showVec=e.target.checked; if(k==='data')this.showData=e.target.checked; this.draw();});
+    if(cfg.type==='tube'){root.querySelector('[data-a="air"]').textContent='切換：有空氣';}
+    this.ro=new ResizeObserver(()=>this.fit());this.ro.observe(this.cv);
+  }
+  end(){if(this.c.type==='tube'){return this.air?3.2:Math.sqrt(2*1.2/G10)+0.02;}return this.m.T;}
+  setMsg(s){this.msgEl.textContent=s;}
+  fit(){const w=this.cv.clientWidth;if(!w)return;const h=Math.round(Math.min(Math.max(w*0.7,260),460));const dpr=window.devicePixelRatio||1;
+    this.cv.style.height=h+'px';this.cv.width=w*dpr;this.cv.height=h*dpr;this.ctx.setTransform(dpr,0,0,dpr,0,0);this.W=w;this.H=h;this.draw();}
+  toggle(){this.play=!this.play;this.root.querySelector('[data-a="play"]').textContent=this.play?'❚❚ 暫停':'▶ 播放';
+    if(this.play){this.last=performance.now();requestAnimationFrame(n=>this.tick(n));}}
+  pause(){if(this.play)this.toggle();}
+  reset(){this.t=0;this.passed.clear();this.setMsg('');if(this.play)this.toggle();this.draw();}
+  tick(now){if(!this.play)return;const dt=Math.min(.05,(now-this.last)/1000)*this.speed;this.last=now;
+    const t0=this.t;let t1=t0+dt;const c=this.c;let stop=null;
+    if(c.pauseTop&&this.m&&this.m.vy0>0){const tt=this.m.vy0/G10;if(t0<tt&&t1>=tt&&!this.passed.has('top')){this.passed.add('top');t1=tt;stop='到達最高點！觀察此刻的速度與加速度箭頭。';}}
+    (c.stops||[]).forEach(s=>{if(!stop&&t0<s&&t1>=s&&!this.passed.has(s)){this.passed.add(s);t1=s;stop=`t = ${s} s，暫停觀察。`;}});
+    if(c.mark&&this.m){const y0=this.m.bodies(t0)[0].y,y1=this.m.bodies(t1)[0].y;if((y0-c.mark)*(y1-c.mark)<=0&&y0!==y1){const k='m'+this.passed.size;this.passed.add(k);stop='經過 '+c.mark+' m 高度！記下這是第幾次經過。';}}
+    if(t1>=this.end()){t1=this.end();this.t=t1;this.draw();this.pause();this.setMsg(c.type==='tube'?'到底了，比較兩者。':'落地！');return;}
+    this.t=t1;this.draw();if(stop){this.pause();this.setMsg(stop);return;}requestAnimationFrame(n=>this.tick(n));}
+  draw(){const ctx=this.ctx,W=this.W,H=this.H;if(!W)return;
+    const C={bg:css('--surface'),ink:css('--ink'),mut:css('--muted'),line:css('--line'),acc:css('--accent'),blue:css('--blue'),sunk:css('--sunk')};
+    ctx.clearRect(0,0,W,H);ctx.fillStyle=C.bg;ctx.fillRect(0,0,W,H);
+    if(this.c.type==='tube')return this.drawTube(ctx,W,H,C);
+    const c=this.c,m=this.m;
+    // world bounds
+    let xmin=0,xmax=m.xmax,ymin=0,ymax=Math.max(m.ymax,1);
+    if(c.type==='line'){ymin=-1;ymax=1;}
+    if(xmax-xmin<ymax*0.6){const span=Math.max(ymax*0.75,4);xmin=-span/2;xmax=span/2;}
+    const bw=(c.h>0&&c.type!=='line')?Math.max((xmax-xmin)*0.18,ymax*0.18):0;
+    if(c.h>0)xmin=Math.min(xmin,-bw-(xmax-xmin)*0.05);
+    const pl=this.showData?48:22,pr=22,pt=28,pb=34;
+    const sc=c.type==='line'?(W-pl-pr)/(xmax-xmin):Math.min((W-pl-pr)/(xmax-xmin),(H-pt-pb)/(ymax-ymin));
+    const ox=pl+((W-pl-pr)-(xmax-xmin)*sc)/2-xmin*sc, oy=c.type==='line'?H*0.55:H-pb;
+    const X=x=>ox+x*sc,Y=y=>oy-y*sc;
+    // ground
+    ctx.strokeStyle=C.ink;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,Y(0));ctx.lineTo(W,Y(0));ctx.stroke();
+    ctx.strokeStyle=C.line;ctx.lineWidth=1;for(let x=4;x<W;x+=12){ctx.beginPath();ctx.moveTo(x,Y(0));ctx.lineTo(x-7,Y(0)+7);ctx.stroke();}
+    if(c.h>0&&c.type!=='line'){ctx.fillStyle=C.sunk;ctx.strokeStyle=C.line;ctx.fillRect(X(-bw)-2,Y(c.h),bw*sc-6,c.h*sc);ctx.strokeRect(X(-bw)-2,Y(c.h),bw*sc-6,c.h*sc);
+      if(c.cliff){ctx.strokeStyle=C.blue;ctx.lineWidth=2;ctx.beginPath();for(let x=X(0);x<W;x+=4)ctx.lineTo(x,Y(0)-2+2*Math.sin(x/8));ctx.stroke();}}
+    if(c.mark){ctx.setLineDash([6,5]);ctx.strokeStyle=C.acc;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,Y(c.mark));ctx.lineTo(W,Y(c.mark));ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle=C.acc;ctx.font='600 13px '+css('--f-body');ctx.fillText(c.mark+' m',W-48,Y(c.mark)-6);}
+    // ruler
+    if(this.showData&&c.type!=='line'){ctx.fillStyle=C.mut;ctx.strokeStyle=C.line;ctx.font='12px '+css('--f-num');const step=ymax>60?20:ymax>25?10:5;
+      for(let y=0;y<=ymax+0.01;y+=step){ctx.beginPath();ctx.moveTo(pl-6,Y(y));ctx.lineTo(W,Y(y));ctx.globalAlpha=.35;ctx.stroke();ctx.globalAlpha=1;ctx.fillText(y+'m',4,Y(y)+4);}}
+    if(this.showData&&c.type==='line'){ctx.fillStyle=C.mut;ctx.font='12px '+css('--f-num');for(let x=0;x<=xmax;x+=6){ctx.fillText(x+'',X(x)-6,Y(0)+30);}ctx.fillText('m',W-16,Y(0)+30);}
+    // trail
+    const N=120,tt=this.t;ctx.lineWidth=1.5;
+    const nb=m.bodies(0).length;
+    for(let b=0;b<nb;b++){const col=m.bodies(0)[b].col==='blue'?C.blue:C.acc;ctx.strokeStyle=col;ctx.globalAlpha=.35;ctx.beginPath();
+      for(let i=0;i<=N;i++){const s=tt*i/N,p=m.bodies(s)[b];i?ctx.lineTo(X(p.x),Y(p.y)):ctx.moveTo(X(p.x),Y(p.y));}ctx.stroke();ctx.globalAlpha=1;
+      if(this.showStrobe){const d=c.strobe||1;for(let s=0;s<=tt+1e-9;s+=d){const p=m.bodies(s)[b];ctx.beginPath();ctx.arc(X(p.x),Y(p.y)+(c.type==='line'?22:0),4,0,7);ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.stroke();
+        if(c.type==='line'){ctx.fillStyle=C.mut;ctx.font='12px '+css('--f-num');ctx.fillText(Math.round(s)+'s',X(p.x)-8,Y(p.y)+44);}}}}
+    // line brackets
+    if(c.type==='line'&&this.showData){ctx.fillStyle=C.acc;ctx.font='600 13px '+css('--f-num');for(let k=1;k<=Math.floor(tt+1e-9);k++){const a=.5*c.a*(k-1)**2,b2=.5*c.a*k*k;ctx.fillText((b2-a)+' m',X((a+b2)/2)-12,Y(0)-30);}}
+    // bodies
+    m.bodies(tt).forEach(p=>{const col=p.col==='blue'?C.blue:C.acc;
+      if(c.type==='line'){ctx.fillStyle=col;ctx.fillRect(X(p.x)-14,Y(0)-20,28,18);}
+      else{ctx.fillStyle=col;ctx.beginPath();ctx.arc(X(p.x),Y(p.y),8,0,7);ctx.fill();}
+      if(p.lab){ctx.fillStyle=C.ink;ctx.font='700 14px '+css('--f-body');ctx.fillText(p.lab,X(p.x)-4,Y(p.y)-14);}
+      if(this.showVec){const vmax=Math.max(Math.abs(m.vy0),20,Math.hypot(p.vx,p.vy)),k=H*0.2/vmax;const bx=X(p.x),by=c.type==='line'?Y(0)-11:Y(p.y);
+        this.arrow(ctx,bx,by,bx+p.vx*k,by-p.vy*k,C.acc,'v');this.arrow(ctx,bx,by,bx+p.ax/Math.hypot(p.ax,p.ay)*38,by-p.ay/Math.hypot(p.ax,p.ay)*38,C.blue,'a');}});
+    // readout：讀數與算式
+    if(this.showData){this.roEl.innerHTML=readout(c,m,tt);}
+    else this.roEl.textContent='';
+  }
+  arrow(ctx,x1,y1,x2,y2,col,lab){const L=Math.hypot(x2-x1,y2-y1);if(L<3)return;const a=Math.atan2(y2-y1,x2-x1);ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-9*Math.cos(a-.4),y2-9*Math.sin(a-.4));ctx.lineTo(x2-9*Math.cos(a+.4),y2-9*Math.sin(a+.4));ctx.fill();
+    ctx.font='italic 700 14px '+css('--f-body');ctx.fillText(lab,x2+5,y2+(lab==='a'?12:-4));}
+  drawTube(ctx,W,H,C){const L=1.2,t=this.t,top=26,bot=H-26,tw=Math.min(140,W*0.35),tx=W/2-tw/2;
+    ctx.strokeStyle=C.ink;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect?ctx.roundRect(tx,top-10,tw,bot-top+20,14):ctx.rect(tx,top-10,tw,bot-top+20);ctx.stroke();
+    if(this.air){ctx.fillStyle=C.blue;ctx.globalAlpha=.12;ctx.fillRect(tx+2,top-8,tw-4,bot-top+16);ctx.globalAlpha=1;}
+    const Y=y=>top+(L-y)/L*(bot-top);
+    const yc=Math.max(0,L-5*t*t);let yf;
+    if(this.air){const vt=0.35,k=G10/vt;yf=Math.max(0,L-vt*(t-(1-Math.exp(-k*t))/k));}else yf=yc;
+    const sp=d=>{const out=[];for(let s=0;s<=t+1e-9;s+=d)out.push(s);return out;};
+    if(this.showStrobe){sp(this.air?0.25:0.05).forEach(s=>{const c2=Math.max(0,L-5*s*s);let f=c2;if(this.air){const vt=.35,k=G10/vt;f=Math.max(0,L-vt*(s-(1-Math.exp(-k*s))/k));}
+      ctx.lineWidth=1.3;ctx.strokeStyle=C.acc;ctx.beginPath();ctx.arc(tx+tw*0.7,Y(c2),4,0,7);ctx.stroke();ctx.strokeStyle=C.mut;ctx.beginPath();ctx.arc(tx+tw*0.3,Y(f),4,0,7);ctx.stroke();});}
+    ctx.fillStyle=C.acc;ctx.beginPath();ctx.arc(tx+tw*0.7,Y(yc),9,0,7);ctx.fill();
+    ctx.save();ctx.translate(tx+tw*0.3,Y(yf));ctx.rotate(-0.4+0.3*Math.sin(t*6));ctx.strokeStyle=C.ink;ctx.fillStyle=C.sunk;ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(0,0,16,5,0,0,7);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(-18,0);ctx.lineTo(18,0);ctx.stroke();ctx.restore();
+    ctx.fillStyle=C.ink;ctx.font='700 14px '+css('--f-body');ctx.fillText('羽毛',tx-40,top+10);ctx.fillText('錢幣',tx+tw+8,top+10);
+    ctx.fillStyle=this.air?C.blue:C.mut;ctx.fillText(this.air?'有空氣':'真空',tx+tw/2-20,bot+20);
+    if(this.showData){const ts=n2(t);
+      this.roEl.innerHTML=`<div class="ro-h">向下為正，<i>g</i> = 10 m/s²，<i>t</i> = ${ts} s（管長 ${L} m，0.25× 慢動作）</div>`+
+        `<div><b class="ro-k">錢幣</b>落下距離 <i>d</i> = ${HALF}<i>gt</i>² = ${HALF} × 10 × ${ts}² = <b>${n2(L-yc)}</b> m</div>`+
+        (this.air?`<div><b class="ro-k">羽毛</b>落下距離 <b>${n2(L-yf)}</b> m（受空氣阻力，加速度越來越小，不能用 ${HALF}<i>gt</i>² 計算）</div>`
+                 :`<div><b class="ro-k">羽毛</b>落下距離 <i>d</i> = ${HALF}<i>gt</i>² = ${HALF} × 10 × ${ts}² = <b>${n2(L-yf)}</b> m（真空中與錢幣相同）</div>`);}
+    else this.roEl.textContent='';
+  }
+}
+
+/* ===================== 介面 ===================== */
+const main=document.getElementById('main'),tabs=document.getElementById('tabs');
+let sims=[];
+function renderTabs(cur){tabs.innerHTML=GROUPS.map(g=>{const done=[0,1,2].filter(i=>st(g.id,i).answered).length;
+  return `<a href="#g${g.id}" aria-current="${g.id===cur}">${g.name}<span class="dot">${done}/3</span></a>`}).join('');}
+function chipFor(g,i){const s=st(g.id,i),q=GROUPS[g.id-1].qs[i];if(s.answered)return '<span class="chip done">已完成</span>';
+  if(s.step>0)return `<span class="chip prog">引導 ${Math.min(s.step,q.steps.length)}/${q.steps.length}</span>`;return '<span class="chip">未開始</span>';}
+
+function renderGroup(gid){
+  sims.forEach(s=>s.ro.disconnect());sims=[];
+  const g=GROUPS[gid-1];
+  let h=`<div class="ghead"><div><h2>${g.name}</h2></div>
+    <div class="topics">${g.qs.map((q,i)=>`<span class="chip">第 ${qNum[i]} 題 · ${q.tag}</span>`).join('')}</div></div>`;
+  g.qs.forEach((q,i)=>{h+=`<section class="q" id="q${gid}-${i}" aria-label="第 ${qNum[i]} 題">
+    <div class="qtext">
+      <div class="qhead"><span class="qno">第 ${qNum[i]} 題</span><h3>${q.title}</h3><span data-chip>${chipFor(g,i)}</span></div>
+      <div class="stem">${q.stem}</div>
+      ${q.subs?`<ol class="subs">${q.subs.map(s=>`<li>${s}</li>`).join('')}</ol>`:''}
+      ${q.options?`<ul class="opts">${q.options.map((o,k)=>`<li><b>(${L[k]})</b>${o}</li>`).join('')}</ul>`:''}
+      ${q.note?`<div class="note">${q.note}</div>`:''}
+      <div class="guide" data-guide></div>
+    </div>
+    <div class="fig"><div class="figtabs" role="tablist"><button role="tab" aria-selected="true" data-f="dg">示意圖</button><button role="tab" aria-selected="false" data-f="sim">模擬動畫</button></div>
+      <div class="figbody" data-dg>${diagram(q.dg)}<div style="font-size:14px;color:var(--muted)">圖中橘色「?」是要求的量。切到「模擬動畫」可以播放、暫停、開頻閃點與向量。</div></div>
+      <div class="figbody" data-sim hidden></div></div>
+  </section>`;});
+  h+=`<section class="solwrap" id="sol${gid}"><h3>${g.name}　詳解</h3><div data-solbody></div></section>`;
+  main.innerHTML=h;
+  tex(main);
+  g.qs.forEach((q,i)=>{const sec=document.getElementById(`q${gid}-${i}`);renderGuide(g,i,sec);
+    let sim=null;sec.querySelector('.figtabs').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;
+      sec.querySelectorAll('.figtabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
+      sec.querySelector('[data-dg]').hidden=b.dataset.f!=='dg';sec.querySelector('[data-sim]').hidden=b.dataset.f!=='sim';
+      if(b.dataset.f==='sim'&&!sim){sim=new Sim(sec.querySelector('[data-sim]'),q.sim);sims.push(sim);}
+    });});
+  renderSol(g);
+}
+
+function renderGuide(g,i,sec){
+  const q=g.qs[i],s=st(g.id,i),box=sec.querySelector('[data-guide]');
+  let h=`<div class="guide-title"><h4>引導步驟</h4>${(!s.free&&!s.answered&&s.step<q.steps.length&&q.options)?'<button class="btn small ghost" data-skip>已討論好，直接作答</button>':''}</div>`;
+  q.steps.forEach((p,k)=>{if(k>s.step)return;const solved=k<s.step;
+    h+=`<div class="step ${solved?'solved':'active'}" data-k="${k}"><div class="sq"><span class="n">${solved?'✓':k+1}</span><span>${p.q}</span></div>`;
+    if(p.t==='mc'){const ord=(s.perm||(s.perm={}))[k]||(s.perm[k]=shuffle(p.c.map((_,j)=>j)));h+=`<div class="choices">${ord.map(j=>`<button data-j="${j}" ${solved?'disabled':''} class="${solved&&j===p.a?'right':''}">${p.c[j]}</button>`).join('')}</div>`;}
+    else{h+=solved?`<div class="numrow"><span style="font-family:var(--f-num);font-weight:700;color:var(--ok)">${p.a}</span><span class="unit">${p.u}</span></div>`:`<form class="numrow" data-num><input id="in-${g.id}-${i}-${k}" type="text" inputmode="decimal" autocomplete="off" aria-label="輸入數值"><span class="unit">${p.u}</span><button class="btn small" type="submit">檢查</button></form>`;}
+    h+=`<div data-fb>${solved?`<div class="fb ok">${p.ok}</div>`:''}</div></div>`;});
+  const stepsDone=s.step>=q.steps.length;
+  if(q.options){
+    if(stepsDone||s.free||s.answered){h+=`<div class="answer"><h4>最後作答：選出你們的答案</h4><div class="choices">${q.options.map((o,k)=>{const cls=s.answered&&k===q.ans?'right':(s.wrongOpts.includes(k)?'wrong':'');return `<button data-opt="${k}" class="${cls}" ${s.answered?'disabled':''}>(${L[k]}) ${o}</button>`}).join('')}</div><div data-afb>${s.answered?'<div class="fb ok">答對了！把每一步的理由寫進學習單，詳解在本組最下方。</div>':''}</div></div>`;}
+    else h+=`<div class="locked">完成全部引導步驟後開放作答。</div>`;
+  } else if(stepsDone){h+=`<div class="answer"><div class="fb ok">每一小題都完成了！把算式與單位整理到學習單上，詳解在本組最下方。</div></div>`; if(!s.answered){s.answered=true;}}
+  box.innerHTML=h;
+  tex(box);
+  sec.querySelector('[data-chip]').innerHTML=chipFor(g,i);renderTabs(g.id);
+
+  box.onclick=e=>{
+    if(e.target.closest('[data-skip]')){s.free=true;renderGuide(g,i,sec);return;}
+    const ob=e.target.closest('[data-opt]');
+    if(ob&&!s.answered){const k=+ob.dataset.opt,fb=box.querySelector('[data-afb]');
+      if(k===q.ans){s.answered=true;renderGuide(g,i,sec);}
+      else{if(!s.wrongOpts.includes(k))s.wrongOpts.push(k);ob.classList.add('wrong');fb.innerHTML=`<div class="fb hint">${q.optFb[k]||'再回頭檢查引導步驟。'}</div>`;tex(fb);}
+      return;}
+    const cb=e.target.closest('.step.active [data-j]');
+    if(cb){const p=q.steps[s.step],j=+cb.dataset.j,fb=cb.closest('.step').querySelector('[data-fb]');
+      if(j===p.a){s.step++;renderGuide(g,i,sec);focusNext(sec);}
+      else{cb.classList.add('wrong');fb.innerHTML=`<div class="fb hint">${(p.h&&p.h[j])||'再想一想。'}</div>`;tex(fb);}}
+  };
+  box.onsubmit=e=>{e.preventDefault();const f=e.target.closest('[data-num]');if(!f)return;const p=q.steps[s.step],inp=f.querySelector('input'),fb=f.closest('.step').querySelector('[data-fb]');
+    const raw=inp.value.replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)).replace(/[－−–]/g,'-').replace(/．/g,'.').replace(/\s/g,'');
+    const v=parseFloat(raw);
+    if(raw===''||isNaN(v)){fb.innerHTML='<div class="fb hint">請輸入一個數字（可以有小數點或負號）。</div>';return;}
+    const tol=p.tol||Math.max(0.01,Math.abs(p.a)*0.01);
+    if(Math.abs(v-p.a)<=tol){s.step++;renderGuide(g,i,sec);focusNext(sec);}
+    else{s.tries=(s.tries||0)+1;let msg=p.h;if(Math.abs(v+p.a)<=tol&&p.a!==0)msg='數值大小對了，正負號再想一下。'; fb.innerHTML=`<div class="fb hint">${msg}</div>`;tex(fb);inp.select();}
+  };
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const r=Math.floor(Math.random()*(i+1));[a[i],a[r]]=[a[r],a[i]];}return a;}
+function focusNext(sec){const n=sec.querySelector('.step.active input, .step.active button, .answer button:not(:disabled)');if(n)n.focus({preventScroll:true});}
+
+function renderSol(g){const box=main.querySelector('[data-solbody]');
+  if(!solOpen[g.id]){box.innerHTML=`<div class="locked"><span>詳解先鎖著。全組三題都討論完、寫完學習單後再打開。</span><button class="btn" data-open>打開詳解</button></div><div data-confirm></div>`;
+    box.querySelector('[data-open]').onclick=()=>{box.querySelector('[data-confirm]').innerHTML=`<div class="confirm"><span>確定全組都完成推理了嗎？打開後就會看到完整答案。</span><button class="btn" data-yes>確定打開</button><button class="btn ghost" data-no>再想想</button></div>`;
+      box.querySelector('[data-yes]').onclick=()=>{solOpen[g.id]=true;renderSol(g);};box.querySelector('[data-no]').onclick=()=>{box.querySelector('[data-confirm]').innerHTML='';};};
+    return;}
+  box.innerHTML=`<div class="sol">${g.qs.map((q,i)=>`<article><h4>第 ${qNum[i]} 題　${q.title}</h4>${q.sol}</article>`).join('')}</div>
+    
+    <div><button class="btn ghost small" data-close>收起詳解</button></div>`;
+  box.querySelector('[data-close]').onclick=()=>{solOpen[g.id]=false;renderSol(g);};
+  tex(box);
+}
+
+function route(){const m=/^#g([1-6])$/.exec(location.hash);const gid=m?+m[1]:1;renderTabs(gid);renderGroup(gid);}
+window.addEventListener('hashchange',()=>{route();window.scrollTo({top:0});});
+route();
+</script>
